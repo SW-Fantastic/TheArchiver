@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="105.0" prefWidth="406.0" styleClass="progress-view" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swdc.archive.views.controller.ProgressViewController">
+   <top>
+      <HBox alignment="BOTTOM_LEFT" prefHeight="43.0" prefWidth="406.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label fx:id="text" text="Label" />
+         </children>
+         <BorderPane.margin>
+            <Insets left="24.0" />
+         </BorderPane.margin>
+      </HBox>
+   </top>
+   <center>
+      <HBox alignment="TOP_CENTER" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <children>
+            <ProgressBar fx:id="progressBar" prefHeight="26.0" prefWidth="364.0" progress="0.0" HBox.hgrow="ALWAYS" />
+         </children>
+         <padding>
+            <Insets top="8.0" />
+         </padding>
+      </HBox>
+   </center>
+</BorderPane>
