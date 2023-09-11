@@ -6,8 +6,10 @@ import org.swdc.archive.splash.SplashScene;
 import org.swdc.archive.views.StartView;
 import org.swdc.dependency.DependencyContext;
 import org.swdc.fx.FXApplication;
+import org.swdc.fx.FXResources;
 import org.swdc.fx.SWFXApplication;
-import org.swdc.libloader.PlatformLoader;
+import org.swdc.ours.common.PackageResources;
+import org.swdc.ours.common.PlatformLoader;
 
 import java.io.File;
 
@@ -25,8 +27,25 @@ public class ArchiverApplication extends FXApplication {
     @Override
     public void onStarted(DependencyContext dependencyContext) {
 
+        FXResources resources = dependencyContext.getByClass(FXResources.class);
+        File assetFolder = resources.getAssetsFolder();
+        File platformSevenZip = new File(assetFolder.getAbsolutePath() + File.separator + "platform" + File.separator + "sevenzip");
+        if (!platformSevenZip.exists()) {
+            if(platformSevenZip.mkdirs()) {
+                File libFile = new File(assetFolder.getAbsolutePath() + File.separator + "sevenzip.zip");
+                if (!libFile.exists()) {
+                    logger.error("no seven zip native library archive, can not start application.");
+                    System.exit(0);
+                    return;
+                }
+                PackageResources.extractZipFromFile(
+                        libFile,platformSevenZip
+                );
+            }
+        }
+
         PlatformLoader loader = new PlatformLoader();
-        loader.load(new File("bin/sevenzip-jbinding/native-deps.xml"));
+        loader.load(new File(platformSevenZip.getAbsolutePath() + File.separator + "native-deps.xml"));
 
         try {
             SevenZip.initLoadedLibraries();

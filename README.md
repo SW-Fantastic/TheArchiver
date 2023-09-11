@@ -22,3 +22,7 @@ the project is an archive file manager which can browser , unarchive , create
  - [ ] 分卷的7Zip压缩文件处理
  - [ ] 文件预览功能
 
+## 额外说明
+
+你需要下载Release中的sevenzip.zip并放入asset目录才能正常启动项目，
+它是7Z的本地类库。

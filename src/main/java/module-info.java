@@ -18,8 +18,8 @@ module archiver {
     requires jchardet;
 
     requires sevenzipjbinding;
-    requires libloader;
     requires org.slf4j;
+    requires swdc.commons;
 
     opens org.swdc.archive to
             swdc.application.dependency,
