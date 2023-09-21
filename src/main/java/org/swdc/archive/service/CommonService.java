@@ -4,16 +4,17 @@ package org.swdc.archive.service;
 import info.monitorenter.cpdetector.io.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.mozilla.intl.chardet.nsDetector;
 import org.mozilla.universalchardet.UniversalDetector;
 import org.swdc.fx.FXResources;
 
-import java.io.File;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -113,6 +114,22 @@ public class CommonService {
 
             }
 
+        } catch (Exception e) {
+            return StandardCharsets.UTF_8;
+        }
+    }
+
+    public Charset getZipCharset(File file) {
+        try {
+            ByteArrayOutputStream bot = new ByteArrayOutputStream();
+            org.apache.commons.compress.archivers.zip.ZipFile zf = new org.apache.commons.compress.archivers.zip.ZipFile(file);
+            Enumeration<ZipArchiveEntry> enumeration = zf.getEntries();
+            while (enumeration.hasMoreElements()) {
+                bot.write(enumeration.nextElement().getRawName());
+            }
+            zf.close();
+
+            return getCharset(new ByteArrayInputStream(bot.toByteArray()),bot.size());
         } catch (Exception e) {
             return StandardCharsets.UTF_8;
         }

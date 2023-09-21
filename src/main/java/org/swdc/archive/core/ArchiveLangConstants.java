@@ -20,6 +20,7 @@ public interface ArchiveLangConstants {
     String LangArchiveCannotAddFile = "archive.common.alerts-error.cannot-add-file";
     String LangArchiveDecompressing = "archive.common.alerts-general.extracting";
     String LangArchiveCannotOpenFile = "archive.common.alerts-error.cannot-open-file";
+    String LangArchiveCannotCreateFile = "archive.common.alerts-error.cannot-create-file";
     String LangArchiveAddingIsNotSupport = "archive.common.alerts-error.add-is-unsupported";
     String LangArchiveRemovingIsNotSupport = "archive.common.alerts-error.remove-is-unsupported";
     String LangArchiveAddFile = "archive.common.alerts-general.add-file";

@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -68,7 +69,7 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
     }
 
     @Override
-    public TreeItem<ArchiveEntry<TarArchiveEntry>> getDictionaryTree() {
+    public void getDictionaryTree(Consumer<TreeItem<ArchiveEntry<TarArchiveEntry>>> consumer) {
 
         List<TarArchiveEntry> entries = tar.getEntries();
 
@@ -121,7 +122,7 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
 
         TreeItem<ArchiveEntry<TarArchiveEntry>> root = new TreeItem<>(rootEntry);
         UIUtils.createTree(root,rootEntry);
-        return root;
+        consumer.accept(root);
     }
 
     @Override

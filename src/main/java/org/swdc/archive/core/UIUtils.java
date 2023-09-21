@@ -99,12 +99,12 @@ public class UIUtils {
             ArchiveEntry<ZipArchiveEntry> parentEntry = entry;
             while (parentEntry != null && !parentEntry.name().toLowerCase().endsWith(extension.toLowerCase())) {
                 if (inArchivePath.length() > 0) {
-                    inArchivePath.insert(0, File.separator);
+                    inArchivePath.insert(0, "/");
                 }
                 inArchivePath.insert(0,parentEntry.name());
                 parentEntry = parentEntry.getParent();
             }
-            inArchivePath.append(inArchivePath.length() > 0 ? File.separator: "").append(willAdded.getName());
+            inArchivePath.append(inArchivePath.length() > 0 ? "/": "").append(willAdded.getName());
         }
         return inArchivePath.toString();
     }

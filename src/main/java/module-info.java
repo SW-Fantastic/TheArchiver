@@ -20,6 +20,7 @@ module archiver {
     requires sevenzipjbinding;
     requires org.slf4j;
     requires swdc.commons;
+    requires zip4j;
 
     opens org.swdc.archive to
             swdc.application.dependency,

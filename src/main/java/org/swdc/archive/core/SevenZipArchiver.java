@@ -250,7 +250,7 @@ public class SevenZipArchiver implements Archive<Integer,ArchiveEntry<Integer>> 
     }
 
     @Override
-    public TreeItem getDictionaryTree() {
+    public void getDictionaryTree(Consumer<TreeItem<ArchiveEntry<Integer>>> consumer) {
 
         TreeItem<ArchiveEntry<Integer>> root = new TreeItem<>();
 
@@ -262,10 +262,10 @@ public class SevenZipArchiver implements Archive<Integer,ArchiveEntry<Integer>> 
             Platform.runLater(() -> {
                 root.setValue(tree);
                 createTree(root,tree);
+                consumer.accept(root);
             });
         });
 
-        return root;
     }
 
 

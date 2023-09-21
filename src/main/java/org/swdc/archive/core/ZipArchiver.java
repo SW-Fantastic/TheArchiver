@@ -3,9 +3,13 @@ package org.swdc.archive.core;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TreeItem;
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.FileHeader;
+import net.lingala.zip4j.model.ZipHeader;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.progress.ProgressMonitor;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.mozilla.universalchardet.UniversalDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +20,7 @@ import org.swdc.fx.FXResources;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -23,7 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArchiveEntry>> {
+public class ZipArchiver implements Archive<FileHeader,ArchiveEntry<FileHeader>> {
 
     private File file;
 
@@ -36,6 +41,8 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
     private int counts = 0;
 
     private FXResources resources;
+
+    private boolean multiple;
 
     private static Logger logger = LoggerFactory.getLogger(ZipArchiver.class);
 
@@ -52,20 +59,8 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
             try {
 
                 this.zipFile = new ZipFile(file);
-
-                UniversalDetector universalDetector = new UniversalDetector(null);
-                FileInputStream fileInputStream = new FileInputStream(file);
-                byte[] data = new byte[2048];
-                int offset = 0;
-                int readed = 0;
-                while ((readed = fileInputStream.read(data)) > 0 && universalDetector.isDone()) {
-                    universalDetector.handleData(data,0,readed);
-                    offset = offset + readed;
-                }
-
-                universalDetector.dataEnd();
-
-
+                this.zipFile.setCharset(commonService.getZipCharset(file));
+                this.multiple = zipFile.isSplitArchive();
                 this.archiveView.archiver(this);
 
             } catch (Exception e) {
@@ -93,45 +88,48 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
         return file;
     }
 
-    private ArchiveEntry<ZipArchiveEntry> buildTree() {
+    private ArchiveEntry<FileHeader> buildTree() {
 
         ResourceBundle bundle = resources.getResourceBundle();
-
         counts = 0;
 
-        ArchiveEntry<ZipArchiveEntry> archiveEntry = new ArchiveEntry<>(null);
+        ArchiveEntry<FileHeader> archiveEntry = new ArchiveEntry<>(null);
         archiveEntry.name(p -> file.getName());
 
-        Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
+        List<FileHeader> entries;
+        try {
+            entries = zipFile.getFileHeaders();
+        } catch (Exception e) {
+            archiveView.hide();
+            logger.error("failed to read entries.",e);
+            return null;
+        }
 
-        List<ZipArchiveEntry> folders = new ArrayList<>();
-        List<ZipArchiveEntry> files = new ArrayList<>();
+        List<FileHeader> folders = new ArrayList<>();
+        List<FileHeader> files = new ArrayList<>();
 
         ProgressView progressView = archiveView.getView(ProgressView.class);
         progressView.update(bundle.getString(ArchiveLangConstants.LangArchiveFileOpening),
                 bundle.getString(ArchiveLangConstants.LangArchivePreparingParse), 0.4);
         progressView.show();
 
-        while (entries.hasMoreElements()) {
-            ZipArchiveEntry entry = entries.nextElement();
-            if (entry.isDirectory()) {
-                folders.add(entry);
+        for (FileHeader header : entries) {
+            if (header.isDirectory()) {
+                folders.add(header);
             } else {
-                files.add(entry);
+                files.add(header);
             }
             counts ++;
         }
 
-        Function<ZipArchiveEntry,ArchiveEntry<ZipArchiveEntry>> resolveFolder = (ZipArchiveEntry entry) -> {
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(entry.getRawName());
-            Charset charset = commonService.getCharset(bin,bin.available());
-            String path = new String(entry.getRawName(),charset);
+        Function<FileHeader,ArchiveEntry<FileHeader>> resolveFolder = (FileHeader entry) -> {
 
+            String path = utfName(entry);
             String[] parts = path.split("/");
 
-            ArchiveEntry<ZipArchiveEntry> parent = archiveEntry;
-            ArchiveEntry<ZipArchiveEntry> current = null;
+            ArchiveEntry<FileHeader> parent = archiveEntry;
+            ArchiveEntry<FileHeader> current = null;
 
             for (int idx = 0; idx < parts.length; idx ++) {
 
@@ -154,12 +152,12 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
             return parent;
         };
 
-        Consumer<ZipArchiveEntry> resolveFile = (entry) -> {
+        Consumer<FileHeader> resolveFile = (entry) -> {
 
-            ArchiveEntry<ZipArchiveEntry> finalParent = resolveFolder.apply(entry);
-            ArchiveEntry<ZipArchiveEntry> target = new ArchiveEntry<>(entry);
+            ArchiveEntry<FileHeader> finalParent = resolveFolder.apply(entry);
+            ArchiveEntry<FileHeader> target = new ArchiveEntry<>(entry);
             target.name(p -> getEntryName(p,finalParent));
-            target.size(ZipArchiveEntry::getSize);
+            target.size(FileHeader::getUncompressedSize);
             finalParent.addFile(target.name(),target);
             target.setParent(finalParent);
 
@@ -167,20 +165,20 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
 
 
         double curr = 0;
-        for (ZipArchiveEntry entry: folders) {
+        for (FileHeader entry: folders) {
             progressView.update(
                     bundle.getString(ArchiveLangConstants.LangArchiveFileOpening),
-                    entry.getName(),
+                    utfName(entry),
                     curr / counts
             );
             resolveFolder.apply(entry);
             curr ++;
         }
 
-        for (ZipArchiveEntry entry: files) {
+        for (FileHeader entry: files) {
             progressView.update(
                     bundle.getString(ArchiveLangConstants.LangArchiveFileOpening),
-                    entry.getName(),
+                    utfName(entry),
                     curr / counts
             );
             resolveFile.accept(entry);
@@ -194,15 +192,9 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
     }
 
 
-    public String getEntryName(ZipArchiveEntry p, ArchiveEntry<ZipArchiveEntry> parent) {
+    public String getEntryName(FileHeader p, ArchiveEntry<FileHeader> parent) {
 
-        Charset charset = null;
-        ByteArrayInputStream bin = new ByteArrayInputStream(p.getRawName());
-        charset = commonService.getCharset(bin,bin.available());
-
-        byte[] entryNameBytes = p.getRawName();
-        String entryName = new String(entryNameBytes,charset);
-
+        String entryName = utfName(p);
         if (entryName.contains("/")) {
             return entryName.substring(entryName.lastIndexOf("/") + 1);
         } else {
@@ -212,28 +204,27 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
 
 
     @Override
-    public TreeItem<ArchiveEntry<ZipArchiveEntry>> getDictionaryTree() {
+    public void getDictionaryTree(Consumer<TreeItem<ArchiveEntry<FileHeader>>> consumer) {
 
-        TreeItem<ArchiveEntry<ZipArchiveEntry>> root = new TreeItem<>();
+        TreeItem<ArchiveEntry<FileHeader>> root = new TreeItem<>();
         archiveView.getView().setDisable(true);
 
         commonService.submit(() -> {
-            ArchiveEntry<ZipArchiveEntry> tree = buildTree();
+            ArchiveEntry<FileHeader> tree = buildTree();
             Platform.runLater(() -> {
                 root.setValue(tree);
                 UIUtils.createTree(root,tree);
+                consumer.accept(root);
                 archiveView.getView().setDisable(false);
             });
         });
-
-        return root;
     }
 
     @Override
-    public void extract(List<ArchiveEntry<ZipArchiveEntry>> extract, File target, BiConsumer<String, Double> callback) {
+    public void extract(List<ArchiveEntry<FileHeader>> extract, File target, BiConsumer<String, Double> callback) {
         for (int idx = 0; idx < extract.size(); idx++) {
-            ArchiveEntry<ZipArchiveEntry> ent = extract.get(idx);
-            ZipArchiveEntry entry = ent.getEntry();
+            ArchiveEntry<FileHeader> ent = extract.get(idx);
+            FileHeader entry = ent.getEntry();
             if (entry != null) {
                 File targetFile = getExtractTargetFile(ent,target);
                 callback.accept(targetFile.getParentFile().getName(), ((double)idx) / extract.size());
@@ -266,15 +257,11 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
     }
 
     @Override
-    public void addEntry(ArchiveEntry<ZipArchiveEntry> targetFolderEntry, File item) {
+    public void addEntry(ArchiveEntry<FileHeader> targetFolderEntry, File item) {
 
         ResourceBundle bundle = resources.getResourceBundle();
 
         try {
-
-            File temp = new File(file.getAbsolutePath() + ".tmp");
-            ZipArchiveOutputStream outputStream = new ZipArchiveOutputStream(temp);
-            outputStream.setEncoding(zipFile.getEncoding());
 
             archiveView.getView().setDisable(true);
             ProgressView progressView = archiveView.getView(ProgressView.class);
@@ -283,25 +270,49 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
                     bundle.getString(ArchiveLangConstants.LangArchivePrepareAdding),
                     0
             );
+
             commonService.submit(() -> {
                 try {
+
+                    ProgressMonitor progressMonitor = zipFile.getProgressMonitor();
+                    ZipParameters parameters = new ZipParameters();
+                    parameters.setFileNameInZip(
+                            UIUtils.generateFileInArchivePath(targetFolderEntry,"zip",item)
+                    );
+
                     progressView.show();
-                    double curr = 0;
-                    Enumeration<ZipArchiveEntry> entryEnumeration = zipFile.getEntries();
-                    while (entryEnumeration.hasMoreElements()) {
+                    zipFile.setRunInThread(true);
+                    FileInputStream in = new FileInputStream(item) {
+                        @Override
+                        public int read(byte[] b) throws IOException {
+                            int readed =  super.read(b);
+                            long proceed = item.length() - available();
+                            double progress = (double) proceed / (double) item.length();
+                            progressView.update(
+                                    bundle.getString(ArchiveLangConstants.LangArchiveUpdatingFile),
+                                    bundle.getString(ArchiveLangConstants.LangArchiveWritingFile) + item.getName(),
+                                    progress
+                            );
+                            return readed;
+                        }
 
-                        ZipArchiveEntry entry = entryEnumeration.nextElement();
-                        progressView.update(
-                                bundle.getString(ArchiveLangConstants.LangArchiveUpdatingFile),
-                                entry.getName(),
-                                curr / counts
-                        );
+                    };
+                    zipFile.addStream(in,parameters);
 
-                        outputStream.putArchiveEntry(entry);
-                        outputStream.write(zipFile.getInputStream(entry).readAllBytes());
-                        outputStream.closeArchiveEntry();
+                    int prog = progressMonitor.getPercentDone();
+                    while (progressMonitor.getState() != ProgressMonitor.State.READY) {
+                        if (prog != progressMonitor.getPercentDone()) {
+                            prog = progressMonitor.getPercentDone();
+                            progressView.update(
+                                    bundle.getString(ArchiveLangConstants.LangArchiveUpdatingFile),
+                                    bundle.getString(ArchiveLangConstants.LangArchiveWritingFile) + file.getName(),
+                                    progressMonitor.getPercentDone() / 100.0
+                            );
+                        }
+                    }
 
-                        curr ++;
+                    if (progressMonitor.getResult() == ProgressMonitor.Result.ERROR) {
+                        logger.error("failed to write file", progressMonitor.getException());
                     }
 
                     progressView.update(
@@ -309,18 +320,6 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
                             bundle.getString(ArchiveLangConstants.LangArchiveWritingFile) + file.getName(),
                             1
                     );
-
-                    ZipArchiveEntry entry = new ZipArchiveEntry(item,UIUtils.generateFileInArchivePath(targetFolderEntry,"zip",item));
-                    outputStream.putArchiveEntry(entry);
-                    outputStream.write(Files.readAllBytes(item.toPath()));
-                    outputStream.closeArchiveEntry();
-                    outputStream.close();
-
-                    zipFile.close();
-                    file.delete();
-                    temp.renameTo(file);
-
-                    zipFile = new ZipFile(file);
 
                     Platform.runLater(() -> {
                         archiveView.reload();
@@ -336,8 +335,16 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
         }
     }
 
+    private String utfName(FileHeader name) {
+        byte[] data = name.getFileName().getBytes(zipFile.getCharset());
+        if (!name.isFileNameUTF8Encoded()) {
+            return new String(data,Charset.forName(System.getProperty("sun.jnu.encoding")));
+        }
+        return name.getFileName();
+    }
+
     @Override
-    public void removeEntry(List<ArchiveEntry<ZipArchiveEntry>> entries) {
+    public void removeEntry(List<ArchiveEntry<FileHeader>> entries) {
 
         ResourceBundle bundle = resources.getResourceBundle();
 
@@ -347,13 +354,9 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
                     .map(e -> e.getEntry() == null ?
                             UIUtils.generateEntryInArchivePath(e, "zip")
                                     .replace(File.separator,"/"):
-                            e.getEntry().getName()
+                            utfName(e.getEntry())
                     )
                     .collect(Collectors.toList());
-
-            File temp = new File(file.getAbsolutePath() + ".tmp");
-            ZipArchiveOutputStream outputStream = new ZipArchiveOutputStream(temp);
-            outputStream.setEncoding(zipFile.getEncoding());
 
             archiveView.getView().setDisable(true);
             ProgressView progressView = archiveView.getView(ProgressView.class);
@@ -365,37 +368,21 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
             commonService.submit(() -> {
                 try {
                     progressView.show();
-                    double curr = 0;
-                    Enumeration<ZipArchiveEntry> entryEnumeration = zipFile.getEntries();
-                    while (entryEnumeration.hasMoreElements()) {
 
-                        ZipArchiveEntry entry = entryEnumeration.nextElement();
-                        if (names.contains(entry.getName())) {
-                            // skip the archive which will delete.
-                            continue;
-                        }
+                    zipFile.removeFiles(names);
+
+                    ProgressMonitor progressMonitor = zipFile.getProgressMonitor();
+                    zipFile.setRunInThread(true);
+
+                    while (progressMonitor.getState() != ProgressMonitor.State.READY) {
                         progressView.update(
                                 bundle.getString(ArchiveLangConstants.LangArchiveUpdatingFile),
-                                entry.getName(),
-                                curr / (counts - entries.size())
+                                file.getName(),
+                                progressMonitor.getPercentDone() / 100.0
                         );
-
-                        outputStream.putArchiveEntry(entry);
-                        outputStream.write(zipFile.getInputStream(entry).readAllBytes());
-                        outputStream.closeArchiveEntry();
-
-                        curr ++;
                     }
 
-                    outputStream.close();
-                    zipFile.close();
-
-                    file.delete();
-                    temp.renameTo(file);
-
                     progressView.update("正在更新","文件删除即将完成", 1);
-
-                    zipFile = new ZipFile(file);
 
                     Platform.runLater(() -> {
                         archiveView.reload();
@@ -415,7 +402,7 @@ public class ZipArchiver implements Archive<ZipArchiveEntry,ArchiveEntry<ZipArch
 
     @Override
     public boolean editable() {
-        return true;
+        return !multiple;
     }
 
     @Override

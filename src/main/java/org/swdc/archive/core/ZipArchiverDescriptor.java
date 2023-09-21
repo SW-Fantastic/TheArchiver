@@ -7,11 +7,17 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.model.enums.CompressionLevel;
+import net.lingala.zip4j.model.enums.CompressionMethod;
+import net.lingala.zip4j.progress.ProgressMonitor;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.zip.Zip64Mode;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.controlsfx.control.PropertySheet;
+import org.slf4j.Logger;
 import org.swdc.archive.service.CommonService;
 import org.swdc.archive.views.ArchiveView;
 import org.swdc.archive.views.CompressView;
@@ -23,6 +29,7 @@ import org.swdc.fx.config.ConfigViews;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -43,6 +50,8 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
     @Inject
     private ThreadPoolExecutor executor;
 
+    @Inject
+    private Logger logger;
 
     @Override
     public String name() {
@@ -54,7 +63,7 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
         if (extensionFilter == null) {
             extensionFilter = new FileChooser.ExtensionFilter(
                     resources.getResourceBundle().getString(ArchiveLangConstants.LangZipArchiveDisplayName),
-                    "*.zip"
+                    "*.zip","*.zip.*","*.z*"
             );
         }
         return extensionFilter;
@@ -62,7 +71,8 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
 
     @Override
     public boolean support(File file) {
-        return file.getName().toLowerCase().endsWith("zip");
+        return file.getName().toLowerCase()
+                .matches(".+\\.(z[0-9]+|zip\\.[0-9]+|zip)");
     }
 
     @Override
@@ -82,7 +92,7 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
 
         ResourceBundle bundle = resources.getResourceBundle();
 
-        ZipCompressConf compressConf = new ZipCompressConf();
+        ZipCompressConf compressConf = new ZipCompressConf(bundle);
 
         BorderPane compressView = (BorderPane) view.getView();
         ObservableList properties = ConfigViews.parseConfigs(resources,compressConf);
@@ -113,83 +123,55 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
             executor.execute(() -> {
                 progressView.show();
                 // do compress
-                try(ZipArchiveOutputStream zot = new ZipArchiveOutputStream(targetFile)) {
-
-                    zot.setUseZip64(Zip64Mode.AsNeeded);
-                    zot.setLevel(compressConf.getLevel());
-                    zot.setMethod(compressConf.getCompressMethod().equals("DEFLATED") ? ZipArchiveEntry.DEFLATED : ZipArchiveEntry.STORED);
-                    zot.setEncoding("UTF8");
-                    if (source.isFile()) {
-                        System.err.println("is file");
-                        writeFileIntoArchive(zot,source.getName(),source, p -> {
-                            progressView.update(
-                                    bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
-                                    source.getAbsolutePath(),
-                                    p
-                            );
-                        });
-                    } else {
-                        System.err.println("is folder");
-                        writeFolderIntoArchive(zot,source,source.getName(), (path,prog) -> {
-                            progressView.update(
-                                    bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
-                                    path,
-                                    prog
-                            );
-                        });
+                ZipParameters parameters = new ZipParameters();
+                CompressionLevel selLevel = CompressionLevel.NORMAL;
+                String levelStr = compressConf.getLevel();
+                String[] l18nLevelStr = bundle.getString("archive.zip.compress-levels").split(",");
+                for (int idx = 0; idx < l18nLevelStr.length; idx ++) {
+                    if (levelStr.equals(l18nLevelStr[idx])) {
+                        selLevel = CompressionLevel.values()[idx];
                     }
-                    zot.finish();
+                }
+                parameters.setCompressionLevel(selLevel);
+                parameters.setCompressionMethod(CompressionMethod.valueOf(compressConf.getCompressMethod()));
+
+                ZipFile zipFile = new ZipFile(targetFile);
+                zipFile.setCharset(StandardCharsets.UTF_8);
+
+                try {
+                    ProgressMonitor monitor = zipFile.getProgressMonitor();
+                    zipFile.setRunInThread(true);
+
+                    if (source.isFile()) {
+                        zipFile.addFile(source,parameters);
+                    } else {
+                        zipFile.addFolder(source,parameters);
+                    }
+
+                    double prog = 0.0;
+                    while (monitor.getState() != ProgressMonitor.State.READY) {
+                        prog = (double) monitor.getWorkCompleted() / (double) monitor.getTotalWork();
+                        progressView.update(
+                                bundle.getString(ArchiveLangConstants.LangArchiveUpdatingFile),
+                                bundle.getString(ArchiveLangConstants.LangArchiveWritingFile) + monitor.getFileName(),
+                                prog
+                        );
+                    }
+                    if (monitor.getResult() == ProgressMonitor.Result.ERROR) {
+                        Alert alert = view.alert(
+                                bundle.getString(ArchiveLangConstants.LangArchiveErrorTitle),
+                                bundle.getString(ArchiveLangConstants.LangArchiveCannotCreateFile),
+                                Alert.AlertType.ERROR
+                        );
+                        alert.showAndWait();
+                        logger.error("failed to create archive,", monitor.getException());
+                    }
                     Platform.runLater(progressView::hide);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("error on creating archive,", e);
                 }
             });
         }
     }
 
-
-    private void writeFolderIntoArchive(ZipArchiveOutputStream zot,File folder, String name, BiConsumer<String, Double> progUpdater) throws IOException {
-        File[] files = folder.listFiles();
-        if (files == null) {
-            System.err.println("no files, return.");
-            return;
-        }
-        for (int idx = 0; idx < files.length; idx ++) {
-            File file = files[idx];
-            System.err.println(file.getName());
-            if (file.isFile()) {
-                writeFileIntoArchive(zot,name + File.separator + file.getName(),file, null);
-                if (progUpdater != null) {
-                    progUpdater.accept(name + File.separator + file.getName(), ((double)idx) / files.length);
-                }
-            } else {
-                writeFolderIntoArchive(zot,file,name + File.separator + file.getName(),progUpdater);
-                if (progUpdater != null) {
-                    progUpdater.accept(name + File.separator + file.getName(), ((double)idx) / files.length);
-                }
-            }
-        }
-    }
-
-    private void writeFileIntoArchive(ZipArchiveOutputStream zot, String name, File file, Consumer<Double> progUpdate) throws IOException {
-        if (file.isFile()) {
-            ArchiveEntry entry = zot.createArchiveEntry(file,name);
-            zot.putArchiveEntry(entry);
-            try(FileInputStream fin = new FileInputStream(file)) {
-                byte[] buf = new byte[1024 * 4];
-                double curr = 0.0;
-                int len = -1;
-                while ((len = fin.read(buf)) > -1) {
-                    zot.write(buf,0,len);
-                    curr = curr + len;
-                    if (progUpdate != null) {
-                        progUpdate.accept(curr / file.length());
-                    }
-                }
-                zot.closeArchiveEntry();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
 }

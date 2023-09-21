@@ -127,20 +127,23 @@ public class ArchiveView extends AbstractView {
 
     public void archiver(Archive archive) {
         this.archive = archive;
-        TreeItem<ArchiveEntry> root = archive.getDictionaryTree();
-        TreeView<ArchiveEntry> treeView = findById("folderTree");
-        treeView.setRoot(root);
+        archive.getDictionaryTree( rst -> {
+            TreeItem<ArchiveEntry> root = (TreeItem<ArchiveEntry>)rst;
+            TreeView<ArchiveEntry> treeView = findById("folderTree");
+            treeView.setRoot(root);
 
-        Stage stage = this.getStage();
-        stage.setOnHidden(e -> archive.close());
-        stage.setTitle(
-                resources.getResourceBundle()
-                        .getString(ArchiveLangConstants.LangArchiveViewTitle) +
-                        archive.getArchiveFile().getAbsolutePath()
-        );
+            Stage stage = this.getStage();
+            stage.setOnHidden(e -> archive.close());
+            stage.setTitle(
+                    resources.getResourceBundle()
+                            .getString(ArchiveLangConstants.LangArchiveViewTitle) +
+                            archive.getArchiveFile().getAbsolutePath()
+            );
 
-        this.archiveEditable.set(!archive.editable());
-        this.loadFile(root.getValue());
+            this.archiveEditable.set(!archive.editable());
+            this.loadFile((ArchiveEntry) root.getValue());
+        });
+
     }
 
     public Archive getArchive() {
@@ -148,11 +151,50 @@ public class ArchiveView extends AbstractView {
     }
 
     public void reload() {
-        TreeItem<ArchiveEntry> root = archive.getDictionaryTree();
-        TreeView<ArchiveEntry> treeView = findById("folderTree");
-        treeView.setRoot(root);
+         archive.getDictionaryTree(rst -> {
+             TreeItem<ArchiveEntry> root = (TreeItem<ArchiveEntry>)rst;
+             TreeView<ArchiveEntry> treeView = findById("folderTree");
+             TreeItem<ArchiveEntry> item = treeView.getSelectionModel().getSelectedItem();
 
-        this.loadFile(root.getValue());
+             StringBuilder path = new StringBuilder();
+             while (item != null && item != treeView.getRoot()) {
+                 ArchiveEntry entry = item.getValue();
+                 if (entry != null) {
+                     path.insert(0, "/" + entry.name());
+                 }
+                 item = item.getParent();
+             }
+             treeView.setRoot(root);
+             this.loadFile(root.getValue());
+             this.reOpenPath(treeView,path.substring(1));
+         });
+    }
+
+    private void reOpenPath(TreeView<ArchiveEntry> tree,String path) {
+        TreeItem<ArchiveEntry> root = tree.getRoot();
+        root.setExpanded(true);
+        if (path.isBlank()) {
+            return;
+        }
+        TreeItem<ArchiveEntry> prev = root;
+        TreeItem<ArchiveEntry> curr = root;
+        String[] parts = path.split("/");
+        for (String part: parts) {
+            for (TreeItem<ArchiveEntry> entry: curr.getChildren()) {
+                ArchiveEntry val = entry.getValue();
+                if (val != null && val.name().equals(part)) {
+                    curr = entry;
+                    break;
+                }
+            }
+            if (curr == prev) {
+                // folder is gone
+                break;
+            } else {
+                curr.setExpanded(true);
+            }
+        }
+        tree.getSelectionModel().select(curr);
     }
 
 }

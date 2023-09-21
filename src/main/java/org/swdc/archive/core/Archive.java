@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,7 +23,7 @@ public interface Archive<R,T extends ArchiveEntry<R>> {
      * 构建文件树（Tree）。
      * @return
      */
-    TreeItem<T> getDictionaryTree();
+    void getDictionaryTree(Consumer<TreeItem<T>> item);
 
     /**
      * 解压指定的内容。

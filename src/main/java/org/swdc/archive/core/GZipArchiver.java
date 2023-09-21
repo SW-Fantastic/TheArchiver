@@ -13,10 +13,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.List;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
-public class GZipArchiver implements Archive {
+public class GZipArchiver implements Archive<String,ArchiveEntry<String>> {
 
     private File gzFile;
 
@@ -43,7 +45,7 @@ public class GZipArchiver implements Archive {
     }
 
     @Override
-    public TreeItem getDictionaryTree() {
+    public void getDictionaryTree(Consumer<TreeItem<ArchiveEntry<String>>> consumer) {
 
         TreeItem root = new TreeItem();
 
@@ -60,11 +62,11 @@ public class GZipArchiver implements Archive {
 
         root.setValue(entry);
 
-        return root;
+        consumer.accept(root);
     }
 
     @Override
-    public void extract(List extract, File target, BiConsumer progressCallback) {
+    public void extract(List<ArchiveEntry<String>> extract, File target, BiConsumer<String,Double> progressCallback) {
         try {
             FileInputStream fin = new FileInputStream(gzFile);
             GzipCompressorInputStream gzin = new GzipCompressorInputStream(fin);
@@ -92,7 +94,7 @@ public class GZipArchiver implements Archive {
     }
 
     @Override
-    public void addEntry(ArchiveEntry targetFolderEntry, File item) {
+    public void addEntry(ArchiveEntry<String> targetFolderEntry, File item) {
         ResourceBundle bundle = resources.getResourceBundle();
         Alert alert = view.alert(
                 bundle.getString(ArchiveLangConstants.LangArchiveMessageTitle),
@@ -103,7 +105,7 @@ public class GZipArchiver implements Archive {
     }
 
     @Override
-    public void removeEntry(List entries) {
+    public void removeEntry(List<ArchiveEntry<String>> entries) {
         ResourceBundle bundle = resources.getResourceBundle();
         Alert alert = view.alert(
                 bundle.getString(ArchiveLangConstants.LangArchiveMessageTitle),

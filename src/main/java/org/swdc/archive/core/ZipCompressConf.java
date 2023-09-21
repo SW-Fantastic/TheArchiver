@@ -6,6 +6,8 @@ import org.swdc.fx.config.PropEditor;
 import org.swdc.fx.config.editors.NumberEditor;
 import org.swdc.fx.config.editors.SelectionEditor;
 
+import java.util.ResourceBundle;
+
 
 public class ZipCompressConf extends AbstractConfig  {
 
@@ -13,21 +15,25 @@ public class ZipCompressConf extends AbstractConfig  {
     @PropEditor(editor = SelectionEditor.class,
             name = "%archive.zip.compress-method.name",
             description = "%archive.zip.compress-method.desc",
-            resource = "DEFLATED,STORED")
-    private String compressMethod = "DEFLATED";
+            resource = "DEFLATE,STORE")
+    private String compressMethod = "DEFLATE";
 
     @Property("compress-level")
-    @PropEditor(editor = NumberEditor.class,
+    @PropEditor(editor = SelectionEditor.class,
             name = "%archive.zip.compress-level.name",
             description = "%archive.zip.compress-level.desc",
-            resource = "1,5")
-    private Integer level = 1;
+            resource = "%archive.zip.compress-levels")
+    private String level = "Normal";
 
-    public Integer getLevel() {
+    public ZipCompressConf(ResourceBundle resourceBundle) {
+        level = resourceBundle.getString("archive.zip.compress-levels-default");
+    }
+
+    public String getLevel() {
         return level;
     }
 
-    public void setLevel(Integer level) {
+    public void setLevel(String level) {
         this.level = level;
     }
 
