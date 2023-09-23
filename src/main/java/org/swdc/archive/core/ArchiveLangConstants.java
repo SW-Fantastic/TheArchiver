@@ -32,6 +32,8 @@ public interface ArchiveLangConstants {
     String LangAllSupportedFormate = "archive.common.all-support-formate";
     String LangAbout = "archive.about";
 
+    String LangRarArchiveDisplayName = "archive.rar.display-name";
+    String LangRarMissingFirstVolume = "archive.rar.first-volumed-file-missing";
 
     String LangZipArchiveDisplayName = "archive.zip.display-name";
     String LangZipArchiveOpenFailed="archive.zip.open-failed";
@@ -41,7 +43,6 @@ public interface ArchiveLangConstants {
     String LangGZipArchiveCannotRemoveFile = "archive.gzip.cannot-remove-file";
 
     String LangTarArchiveDisplayName = "archive.tar.display-name";
-
     String LangSevenZipDisplayName = "archive.seven-zip.display-name";
     String LangSevenZipMissingFirstVolume = "archive.seven-zip.first-volumed-file-missing";
 

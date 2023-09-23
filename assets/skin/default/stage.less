@@ -1,6 +1,26 @@
 @background:#F7F7FC;
 @primary: #C0BCE3;
 @secondary: #A9AFFA;
+@nothing: rgba(0,0,0,0);
+
+.scroll-bar {
+    -fx-font-size: 10;
+    -fx-background-color:@nothing;
+    .track {
+        -fx-background-color:@nothing;
+        -fx-background-radius: 99;
+    }
+    .thumb {
+        -fx-background-color:@background;
+        -fx-effect:dropshadow(three-pass-box,@primary,10,0,0,0);
+    }
+    .decrement-arrow {
+        -fx-background-color: @nothing;
+    }
+    .increment-arrow{
+        -fx-background-color: @nothing;
+    }
+   }
 
 .comb(){
     -fx-background-color: #FFF;
@@ -227,6 +247,11 @@
             &:hover {
                 -fx-effect: dropshadow(three-pass-box, #CDCDCD, 8, 0.0, 0, 3);
             }
+            .menu-item {
+                &:focused {
+                    -fx-background-color: @secondary;
+                }
+            }
         }
     }
 
@@ -245,6 +270,11 @@
             }
             &:hover {
                 -fx-effect: dropshadow(three-pass-box, #CDCDCD, 4, 0.0, 0, 3);
+            }
+            .menu-item {
+                &:focused {
+                    -fx-background-color: @secondary;
+                }
             }
         }
     }

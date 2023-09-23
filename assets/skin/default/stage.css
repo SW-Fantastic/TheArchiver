@@ -1,3 +1,21 @@
+.scroll-bar {
+  -fx-font-size: 10;
+  -fx-background-color: rgba(0, 0, 0, 0);
+}
+.scroll-bar .track {
+  -fx-background-color: rgba(0, 0, 0, 0);
+  -fx-background-radius: 99;
+}
+.scroll-bar .thumb {
+  -fx-background-color: #f7f7fc;
+  -fx-effect: dropshadow(three-pass-box, #c0bce3, 10, 0, 0, 0);
+}
+.scroll-bar .decrement-arrow {
+  -fx-background-color: rgba(0, 0, 0, 0);
+}
+.scroll-bar .increment-arrow {
+  -fx-background-color: rgba(0, 0, 0, 0);
+}
 .notification-bar .pane {
   -fx-background-color: #f7f7fc !important;
   -fx-padding: 12;
@@ -234,6 +252,10 @@
 .main-view .archive-tool-buttons .menu-button:hover {
   -fx-effect: dropshadow(three-pass-box, #cdcdcd, 8, 0, 0, 3);
 }
+.main-view .archive-tool-buttons .button .menu-item:focused,
+.main-view .archive-tool-buttons .menu-button .menu-item:focused {
+  -fx-background-color: #a9affa;
+}
 .main-view .start-group .button,
 .main-view .start-group .menu-button {
   -fx-background-color: #c0bce3;
@@ -254,6 +276,10 @@
 .main-view .start-group .button:hover,
 .main-view .start-group .menu-button:hover {
   -fx-effect: dropshadow(three-pass-box, #cdcdcd, 4, 0, 0, 3);
+}
+.main-view .start-group .button .menu-item:focused,
+.main-view .start-group .menu-button .menu-item:focused {
+  -fx-background-color: #a9affa;
 }
 .main-view .start-pane .button {
   -fx-background-color: #a9affa;
