@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="640.0" styleClass="main-view" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swdc.archive.views.controller.StartController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="640.0" styleClass="main-view" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swdc.archive.views.controller.StartController">
    <center>
       <VBox prefHeight="365.0" prefWidth="626.0" BorderPane.alignment="CENTER">
          <children>
@@ -27,7 +27,7 @@
             <HBox alignment="TOP_CENTER" prefHeight="99.0" prefWidth="640.0" spacing="12.0" styleClass="start-pane" VBox.vgrow="ALWAYS">
                <children>
                   <Button mnemonicParsing="false" onAction="#onPreference" prefHeight="35.0" prefWidth="68.0" text="%start.preference" />
-                  <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="68.0" text="%start.help" />
+                  <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#onHelp" prefHeight="35.0" prefWidth="68.0" text="%start.help" />
                   <Button layoutX="78.0" layoutY="10.0" mnemonicParsing="false" onAction="#onAbout" prefHeight="35.0" prefWidth="68.0" text="%start.about" />
                </children>
                <padding>

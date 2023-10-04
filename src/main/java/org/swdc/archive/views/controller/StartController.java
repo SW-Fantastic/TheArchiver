@@ -6,6 +6,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import org.swdc.archive.service.FileUIService;
+import org.swdc.archive.views.HelpView;
 import org.swdc.archive.views.PreferenceView;
 import org.swdc.archive.views.StartView;
 
@@ -23,6 +24,9 @@ public class StartController implements Initializable {
 
     @Inject
     private FileUIService fileUIService;
+
+    @Inject
+    private HelpView helpView;
 
     @FXML
     private MenuButton createBtn;
@@ -42,6 +46,11 @@ public class StartController implements Initializable {
     @FXML
     public void onAbout() {
         fileUIService.showAbout(startView);
+    }
+
+    @FXML
+    public void onHelp() {
+        helpView.show();
     }
 
     @Override

@@ -1,0 +1,25 @@
+{
+  "title": "帮助",
+  "langs": {
+    "zh": [{
+      "title": "欢迎",
+      "content": "welcome.html"
+    },{
+      "title": "浏览和操作压缩文件",
+      "content": "browser_archive.html"
+    },{
+      "title": "创建压缩文件",
+      "content": "create_archive.html"
+    }],
+    "en": [{
+      "title": "Welcome",
+      "content": "welcome_en.html"
+    },{
+      "title": "Browser and edit am archive",
+      "content": "browser_archive_en.html"
+    },{
+      "title": "Create archive",
+      "content": "create_archive_en.html"
+    }]
+  }
+}
