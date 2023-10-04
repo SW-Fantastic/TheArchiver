@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import org.swdc.archive.ArchiverApplication;
@@ -14,6 +15,7 @@ import org.swdc.archive.service.FileUIService;
 import org.swdc.archive.views.ArchiveView;
 import org.swdc.archive.views.PreferenceView;
 import org.swdc.archive.views.ProgressView;
+import org.swdc.archive.views.viewer.StreamViewer;
 import org.swdc.dependency.annotations.Prototype;
 import org.swdc.fx.ApplicationHolder;
 import org.swdc.fx.FXResources;
@@ -42,6 +44,9 @@ public class ArchiveViewController implements ViewController<ArchiveView> {
 
     @Inject
     private PreferenceView preferenceView;
+
+    @Inject
+    private List<StreamViewer> preViewers;
 
     @FXML
     private TableView<ArchiveEntry> fileTable;
@@ -173,6 +178,26 @@ public class ArchiveViewController implements ViewController<ArchiveView> {
             });
         });
 
+    }
+
+    @FXML
+    public void archiveTableClicked(MouseEvent event) {
+        if (event.getClickCount() >= 2) {
+            ArchiveEntry entry = fileTable.getSelectionModel().getSelectedItem();
+            if (entry == null) {
+                return;
+            }
+            for (StreamViewer viewer : preViewers) {
+                if (viewer.support(entry)) {
+                    viewer.showPreview(
+                            this.getView(),
+                            this.getView().getArchive(),
+                            entry
+                    );
+                    return;
+                }
+            }
+        }
     }
 
     @FXML

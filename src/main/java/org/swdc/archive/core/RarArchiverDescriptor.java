@@ -49,7 +49,7 @@ public class RarArchiverDescriptor implements ArchiveDescriptor {
     }
 
     @Override
-    public boolean readonly() {
+    public boolean creatable() {
         return true;
     }
 

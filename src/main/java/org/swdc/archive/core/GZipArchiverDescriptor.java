@@ -38,7 +38,7 @@ public class GZipArchiverDescriptor implements ArchiveDescriptor {
     private Logger logger;
 
     @Override
-    public boolean readonly() {
+    public boolean creatable() {
         return false;
     }
 

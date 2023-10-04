@@ -107,7 +107,7 @@ public class FileUIService {
     public List<MenuItem> buildArchiveCreationMenus(AbstractView view) {
         List<MenuItem> archives = new ArrayList<>();
         for (ArchiveDescriptor descriptor : descriptors) {
-            if (descriptor.readonly()) {
+            if (descriptor.creatable()) {
                 continue;
             }
             MenuItem item = new MenuItem(descriptor.name());

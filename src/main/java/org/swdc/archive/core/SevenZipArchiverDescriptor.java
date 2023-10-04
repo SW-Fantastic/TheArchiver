@@ -153,7 +153,7 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
     }
 
     @Override
-    public boolean readonly() {
+    public boolean creatable() {
         return false;
     }
 

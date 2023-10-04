@@ -49,7 +49,7 @@ public interface ArchiveDescriptor {
      * 是否能够创建此类型压缩包
      * @return
      */
-    boolean readonly();
+    boolean creatable();
 
     /**
      * 打开一个压缩文件

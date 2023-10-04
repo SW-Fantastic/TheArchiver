@@ -18,8 +18,8 @@ the project is an archive file manager which can browser , unarchive , create
  - [x] 浏览，解压和压缩Tar文件
  - [x] 浏览，解压和压缩Gz文件
  - [x] 浏览，解压和压缩Tar/GZ文件
- - [ ] 分卷的Zip压缩文件处理
- - [ ] 分卷的7Zip压缩文件处理
+ - [x] 分卷的Zip压缩文件处理
+ - [x] 分卷的7Zip压缩文件处理
  - [ ] 文件预览功能
 
 ## 额外说明

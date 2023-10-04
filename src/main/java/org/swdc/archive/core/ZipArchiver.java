@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.swdc.archive.service.CommonService;
 import org.swdc.archive.views.ArchiveView;
 import org.swdc.archive.views.ProgressView;
+import org.swdc.archive.views.viewer.StreamViewer;
 import org.swdc.fx.FXResources;
 
 import java.io.*;
@@ -46,7 +47,12 @@ public class ZipArchiver implements Archive<FileHeader,ArchiveEntry<FileHeader>>
 
     private static Logger logger = LoggerFactory.getLogger(ZipArchiver.class);
 
-    public ZipArchiver(File file, ArchiveView archiveView, CommonService commonService, FXResources resources) {
+    public ZipArchiver(
+            File file,
+            ArchiveView archiveView,
+            CommonService commonService,
+            FXResources resources
+    ) {
 
         this.file = file;
         this.archiveView = archiveView;
@@ -202,6 +208,18 @@ public class ZipArchiver implements Archive<FileHeader,ArchiveEntry<FileHeader>>
         }
     }
 
+    @Override
+    public InputStream getInputStream(ArchiveEntry<FileHeader> entry) {
+        FileHeader header = entry.getEntry();
+        if (header == null || header.isDirectory()) {
+            return null;
+        }
+        try {
+            return zipFile.getInputStream(header);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     @Override
     public void getDictionaryTree(Consumer<TreeItem<ArchiveEntry<FileHeader>>> consumer) {

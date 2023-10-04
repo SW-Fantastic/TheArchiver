@@ -18,6 +18,7 @@ import org.swdc.archive.views.ProgressView;
 import org.swdc.fx.FXResources;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -524,6 +525,29 @@ public class SevenZipArchiver implements Archive<Integer,ArchiveEntry<Integer>> 
             }
         });
 
+    }
+
+    @Override
+    public InputStream getInputStream(ArchiveEntry<Integer> entry) {
+        if (entry == null || entry.getEntry() < 0) {
+            return null;
+        }
+        return openArchive((simpleInArchive, archive) -> {
+            try {
+                ByteArrayOutputStream bot = new ByteArrayOutputStream();
+                simpleInArchive.getArchiveItem(entry.getEntry()).extractSlow( dt -> {
+                    try {
+                        bot.write(dt);
+                        return dt.length;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                return new ByteArrayInputStream(bot.toByteArray());
+            } catch (Exception ex ) {
+                return null;
+            }
+        });
     }
 
     @Override

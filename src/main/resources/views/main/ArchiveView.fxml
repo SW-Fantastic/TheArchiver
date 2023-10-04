@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="577.0" prefWidth="899.0" styleClass="main-view" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swdc.archive.views.controller.ArchiveViewController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="577.0" prefWidth="899.0" styleClass="main-view" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swdc.archive.views.controller.ArchiveViewController">
    <top>
       <VBox prefHeight="87.0" prefWidth="811.0" BorderPane.alignment="CENTER">
          <children>
@@ -79,7 +79,7 @@
       </SplitPane>
    </left>
    <center>
-      <TableView id="file-table" fx:id="fileTable" prefHeight="200.0" prefWidth="200.0" styleClass="center-pane" BorderPane.alignment="CENTER">
+      <TableView id="file-table" fx:id="fileTable" onMouseClicked="#archiveTableClicked" prefHeight="200.0" prefWidth="200.0" styleClass="center-pane" BorderPane.alignment="CENTER">
         <columns>
             <TableColumn id="file-icon" maxWidth="48.0" minWidth="48.0" prefWidth="68.0" />
           <TableColumn id="fileName" prefWidth="244.0" text="%archive.file-name" />

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+
+
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="563.0" prefWidth="729.0" styleClass="previews" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <BorderPane prefHeight="200.0" prefWidth="200.0">
+         <center>
+            <Canvas id="imageView" height="200.0" width="200.0" BorderPane.alignment="CENTER" />
+         </center>
+      </BorderPane>
+      <BorderPane prefHeight="200.0" prefWidth="200.0">
+         <top>
+            <Slider id="sc" value="50.0" BorderPane.alignment="CENTER">
+               <BorderPane.margin>
+                  <Insets left="128.0" right="128.0" top="24.0" />
+               </BorderPane.margin>
+            </Slider>
+         </top>
+      </BorderPane>
+   </children>
+</StackPane>

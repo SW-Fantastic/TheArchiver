@@ -309,3 +309,32 @@
         }
     }
 }
+
+.previews {
+
+     -fx-background-color:#495057;
+
+     .text-area {
+        -fx-text-fill: #FFF;
+        -fx-font-size: 16px;
+        .scroll-pane {
+            -fx-background-color:#495057;
+            .content {
+                -fx-background-color:#495057;
+            }
+        }
+     }
+
+    .slider .thumb{
+        -fx-background-color:@primary;
+        -fx-effect:dropshadow(three-pass-box, @secondary,10,0,0,0);
+    }
+    .slider .track {
+        -fx-background-color:@background;
+        -fx-background-radius:99;
+        -fx-border-radius: 99;
+        -fx-border-width: 1px;
+        -fx-border-color:@secondary;
+    }
+
+}

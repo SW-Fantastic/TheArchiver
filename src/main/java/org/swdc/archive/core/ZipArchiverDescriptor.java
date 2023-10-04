@@ -22,6 +22,7 @@ import org.swdc.archive.service.CommonService;
 import org.swdc.archive.views.ArchiveView;
 import org.swdc.archive.views.CompressView;
 import org.swdc.archive.views.ProgressView;
+import org.swdc.archive.views.viewer.StreamViewer;
 import org.swdc.dependency.annotations.MultipleImplement;
 import org.swdc.fx.FXResources;
 import org.swdc.fx.config.ConfigViews;
@@ -30,6 +31,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -52,6 +54,9 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
 
     @Inject
     private Logger logger;
+
+    @Inject
+    List<StreamViewer> viewers;
 
     @Override
     public String name() {
@@ -77,13 +82,17 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
 
     @Override
     public Archive open(ArchiveView view, File file) {
-        ZipArchiver archiver = new ZipArchiver(file, view,commonService,resources);
-        return archiver;
+        return new ZipArchiver(
+                file,
+                view,
+                commonService,
+                resources
+        );
     }
 
 
     @Override
-    public boolean readonly() {
+    public boolean creatable() {
         return false;
     }
 

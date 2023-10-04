@@ -302,3 +302,27 @@
   -fx-background-radius: 999;
   -fx-background-color: #c0bce3;
 }
+.previews {
+  -fx-background-color: #495057;
+}
+.previews .text-area {
+  -fx-text-fill: #FFF;
+  -fx-font-size: 16px;
+}
+.previews .text-area .scroll-pane {
+  -fx-background-color: #495057;
+}
+.previews .text-area .scroll-pane .content {
+  -fx-background-color: #495057;
+}
+.previews .slider .thumb {
+  -fx-background-color: #c0bce3;
+  -fx-effect: dropshadow(three-pass-box, #a9affa, 10, 0, 0, 0);
+}
+.previews .slider .track {
+  -fx-background-color: #f7f7fc;
+  -fx-background-radius: 99;
+  -fx-border-radius: 99;
+  -fx-border-width: 1px;
+  -fx-border-color: #a9affa;
+}

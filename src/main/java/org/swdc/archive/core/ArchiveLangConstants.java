@@ -32,6 +32,8 @@ public interface ArchiveLangConstants {
     String LangAllSupportedFormate = "archive.common.all-support-formate";
     String LangAbout = "archive.about";
 
+    String LangPreview = "archive.viewers.preview";
+
     String LangRarArchiveDisplayName = "archive.rar.display-name";
     String LangRarMissingFirstVolume = "archive.rar.first-volumed-file-missing";
 

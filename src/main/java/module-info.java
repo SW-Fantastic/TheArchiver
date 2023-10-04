@@ -7,6 +7,7 @@ module archiver {
     requires javafx.graphics;
     requires javafx.controls;
     requires javafx.fxml;
+    requires javafx.swing;
     requires org.controlsfx.controls;
     requires java.desktop;
     requires jakarta.annotation;
@@ -33,6 +34,18 @@ module archiver {
             swdc.application.dependency,
             swdc.application.fx,
             swdc.application.configs,
+            javafx.graphics,
+            javafx.controls;
+
+    opens org.swdc.archive.views.viewer to
+            swdc.application.dependency,
+            swdc.application.fx,
+            javafx.graphics,
+            javafx.controls;
+
+    opens org.swdc.archive.views.viewer.views to
+            swdc.application.dependency,
+            swdc.application.fx,
             javafx.graphics,
             javafx.controls;
 
@@ -63,6 +76,7 @@ module archiver {
 
     opens lang;
     opens views.main;
+    opens views.viewers;
     opens icons;
 
 }

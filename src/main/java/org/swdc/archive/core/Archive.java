@@ -3,6 +3,7 @@ package org.swdc.archive.core;
 import javafx.scene.control.TreeItem;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -120,6 +121,10 @@ public interface Archive<R,T extends ArchiveEntry<R>> {
             }
             return new File(targetFile.getAbsolutePath() + File.separator + ent.name());
         }
+    }
+
+    default InputStream getInputStream(ArchiveEntry<R> entry) {
+        return null;
     }
 
 }
