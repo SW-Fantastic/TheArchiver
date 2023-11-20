@@ -14,7 +14,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class CompressCreateController implements ViewController<CompressView> {
+public class CompressCreateController extends ViewController<CompressView> {
 
     private CompressView view;
 
@@ -92,16 +92,6 @@ public class CompressCreateController implements ViewController<CompressView> {
     public void resetAndClose() {
         view.setCanceled(true,null,null,null);
         view.hide();
-    }
-
-    @Override
-    public void setView(CompressView view) {
-        this.view = view;
-    }
-
-    @Override
-    public CompressView getView() {
-        return view;
     }
 
 }

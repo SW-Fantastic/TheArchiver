@@ -29,7 +29,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 @Prototype
-public class ArchiveViewController implements ViewController<ArchiveView> {
+public class ArchiveViewController extends ViewController<ArchiveView> {
 
     private ArchiveView view;
 
@@ -59,15 +59,6 @@ public class ArchiveViewController implements ViewController<ArchiveView> {
 
     }
 
-    @Override
-    public void setView(ArchiveView archiveView) {
-        this.view = archiveView;
-    }
-
-    @Override
-    public ArchiveView getView() {
-        return view;
-    }
 
     @FXML
     public void openFile() {

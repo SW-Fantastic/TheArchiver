@@ -496,4 +496,26 @@ public class RarArchiver implements Archive<Integer,ArchiveEntry<Integer>> {
         }
     }
 
+    @Override
+    public InputStream getInputStream(ArchiveEntry<Integer> entry) {
+        if (entry == null || entry.getEntry() < 0) {
+            return null;
+        }
+        return openArchive((simpleInArchive, archive) -> {
+            try {
+                ByteArrayOutputStream bot = new ByteArrayOutputStream();
+                simpleInArchive.getArchiveItem(entry.getEntry()).extractSlow( dt -> {
+                    try {
+                        bot.write(dt);
+                        return dt.length;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                return new ByteArrayInputStream(bot.toByteArray());
+            } catch (Exception ex ) {
+                return null;
+            }
+        });
+    }
 }

@@ -302,6 +302,22 @@
   -fx-background-radius: 999;
   -fx-background-color: #c0bce3;
 }
+.helpview {
+  -fx-background-color: #495057;
+}
+.helpview .tree-view {
+  -fx-background-color: #495057;
+}
+.helpview .tree-view .tree-cell {
+  -fx-text-fill: #EEE;
+  -fx-background-color: rgba(0, 0, 0, 0);
+}
+.helpview .tree-view .tree-cell .arrow {
+  -fx-background-color: #EEE;
+}
+.helpview .tree-view .tree-cell:selected {
+  -fx-background-color: #343a40;
+}
 .previews {
   -fx-background-color: #495057;
 }

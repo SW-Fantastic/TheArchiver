@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-public class HelpViewController implements ViewController<HelpView> {
+public class HelpViewController extends ViewController<HelpView> {
 
     private HelpView helpView;
 
@@ -29,15 +29,6 @@ public class HelpViewController implements ViewController<HelpView> {
     @Inject
     private ArchiverConfig archiverConfig;
 
-    @Override
-    public void setView(HelpView helpView) {
-        this.helpView = helpView;
-    }
-
-    @Override
-    public HelpView getView() {
-        return helpView;
-    }
 
     public TreeItem<HelpItem> generateItems(TreeItem<HelpItem> parent, List<HelpItem> items) {
         for (HelpItem item : items) {

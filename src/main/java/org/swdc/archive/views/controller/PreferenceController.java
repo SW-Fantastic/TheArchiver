@@ -13,7 +13,7 @@ import org.swdc.fx.view.ViewController;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class PreferenceController implements ViewController<PreferenceView> {
+public class PreferenceController extends ViewController<PreferenceView> {
 
     @Inject
     private ArchiverConfig config;
@@ -42,15 +42,6 @@ public class PreferenceController implements ViewController<PreferenceView> {
         view.hide();
     }
 
-    @Override
-    public void setView(PreferenceView preferenceView) {
-        view = preferenceView;
-    }
-
-    @Override
-    public PreferenceView getView() {
-        return view;
-    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {

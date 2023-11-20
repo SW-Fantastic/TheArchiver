@@ -12,9 +12,8 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 @Prototype
-public class ProgressViewController implements ViewController<ProgressView> {
+public class ProgressViewController extends ViewController<ProgressView> {
 
-    private ProgressView view;
 
     @FXML
     private ProgressBar progressBar;
@@ -24,7 +23,7 @@ public class ProgressViewController implements ViewController<ProgressView> {
 
     public void update(String title, String text, double value) {
         Platform.runLater(() -> {
-            view.getStage().setTitle(title);
+            getView().getStage().setTitle(title);
             this.text.setText(text);
             this.progressBar.setProgress(value);
         });
@@ -36,13 +35,4 @@ public class ProgressViewController implements ViewController<ProgressView> {
 
     }
 
-    @Override
-    public void setView(ProgressView progressView) {
-        this.view = progressView;
-    }
-
-    @Override
-    public ProgressView getView() {
-        return view;
-    }
 }
