@@ -16,8 +16,6 @@ import java.util.ResourceBundle;
 
 public class CompressCreateController extends ViewController<CompressView> {
 
-    private CompressView view;
-
     @FXML
     private TextField targetFilePath;
 
@@ -40,7 +38,7 @@ public class CompressCreateController extends ViewController<CompressView> {
         ResourceBundle bundle = resources.getResourceBundle();
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle(bundle.getString(ArchiveLangConstants.LangArchiveInto) + "...");
-        File file = directoryChooser.showDialog(view.getStage());
+        File file = directoryChooser.showDialog(getView().getStage());
         if (file != null) {
             targetFilePath.setText(file.getAbsolutePath());
         }
@@ -51,7 +49,7 @@ public class CompressCreateController extends ViewController<CompressView> {
         ResourceBundle bundle = resources.getResourceBundle();
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle(bundle.getString(ArchiveLangConstants.LangArchiveSourceFolder));
-        File file = directoryChooser.showDialog(view.getStage());
+        File file = directoryChooser.showDialog(getView().getStage());
         if (file != null) {
             sourceFilePath.setText(file.getAbsolutePath());
             File parent = file.getAbsoluteFile().getParentFile();
@@ -67,7 +65,7 @@ public class CompressCreateController extends ViewController<CompressView> {
         ResourceBundle resourceBundle = resources.getResourceBundle();
         FileChooser chooser = new FileChooser();
         chooser.setTitle(resourceBundle.getString(ArchiveLangConstants.LangArchiveSourceFile));
-        File source = chooser.showOpenDialog(view.getStage());
+        File source = chooser.showOpenDialog(getView().getStage());
         if (source != null) {
             sourceFilePath.setText(source.getAbsolutePath());
             File parent = source.getAbsoluteFile().getParentFile();
@@ -84,12 +82,14 @@ public class CompressCreateController extends ViewController<CompressView> {
             resetAndClose();
             return;
         }
+        CompressView view = getView();
         view.setCanceled(false,fileName.getText(),targetFilePath.getText(),sourceFilePath.getText());
         view.hide();
     }
 
     @FXML
     public void resetAndClose() {
+        CompressView view = getView();
         view.setCanceled(true,null,null,null);
         view.hide();
     }

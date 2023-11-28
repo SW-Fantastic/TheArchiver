@@ -31,8 +31,6 @@ import java.util.stream.Collectors;
 @Prototype
 public class ArchiveViewController extends ViewController<ArchiveView> {
 
-    private ArchiveView view;
-
     @Inject
     private FileUIService fileUIService;
 
@@ -68,6 +66,7 @@ public class ArchiveViewController extends ViewController<ArchiveView> {
     @FXML
     public void extractTreeFolder() {
 
+        ArchiveView view = getView();
         ResourceBundle bundle = resources.getResourceBundle();
 
         DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -111,6 +110,7 @@ public class ArchiveViewController extends ViewController<ArchiveView> {
     @FXML
     public void extractFiles() {
 
+        ArchiveView view = getView();
         ResourceBundle bundle = resources.getResourceBundle();
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle(bundle.getString(ArchiveLangConstants.LangArchiveViewDecompressInto));
@@ -145,6 +145,7 @@ public class ArchiveViewController extends ViewController<ArchiveView> {
 
     @FXML
     public void extractAllFile(){
+        ArchiveView view = getView();
         ResourceBundle bundle = resources.getResourceBundle();
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle(bundle.getString(ArchiveLangConstants.LangArchiveViewDecompressInto));
@@ -194,6 +195,7 @@ public class ArchiveViewController extends ViewController<ArchiveView> {
     @FXML
     public void addFile() {
 
+        ArchiveView view = getView();
         ResourceBundle bundle = resources.getResourceBundle();
         if (!view.getArchive().editable()) {
             view.alert(
@@ -225,7 +227,7 @@ public class ArchiveViewController extends ViewController<ArchiveView> {
 
     @FXML
     public void showAbout(){
-        fileUIService.showAbout(view);
+        fileUIService.showAbout(getView());
     }
 
     @FXML
@@ -236,6 +238,8 @@ public class ArchiveViewController extends ViewController<ArchiveView> {
 
     @FXML
     public void deleteArchiveEntry() {
+
+        ArchiveView view = getView();
 
         ResourceBundle bundle = resources.getResourceBundle();
         if (!view.getArchive().editable()) {

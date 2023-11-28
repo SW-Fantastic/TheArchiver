@@ -22,10 +22,11 @@ public class PreferenceController extends ViewController<PreferenceView> {
     private FXResources resources;
 
 
-    private PreferenceView view;
-
     @FXML
     public void saveConfigs() {
+
+        PreferenceView view = getView();
+
         ResourceBundle bundle = resources.getResourceBundle();
         Alert alert = view.alert(
                 bundle.getString(ArchiveLangConstants.LangArchiveMessageTitle),
@@ -39,7 +40,7 @@ public class PreferenceController extends ViewController<PreferenceView> {
 
     @FXML
     public void cancel() {
-        view.hide();
+        getView().hide();
     }
 
 

@@ -18,8 +18,6 @@ import java.util.ResourceBundle;
 
 public class HelpViewController extends ViewController<HelpView> {
 
-    private HelpView helpView;
-
     @FXML
     private TreeView<HelpItem> tocTree;
 
