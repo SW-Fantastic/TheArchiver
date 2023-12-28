@@ -93,7 +93,7 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
 
     @Override
     public boolean creatable() {
-        return false;
+        return true;
     }
 
     @Override
@@ -135,10 +135,10 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
                 ZipParameters parameters = new ZipParameters();
                 CompressionLevel selLevel = CompressionLevel.NORMAL;
                 String levelStr = compressConf.getLevel();
-                String[] l18nLevelStr = bundle.getString("archive.zip.compress-levels").split(",");
-                for (int idx = 0; idx < l18nLevelStr.length; idx ++) {
-                    if (levelStr.equals(l18nLevelStr[idx])) {
-                        selLevel = CompressionLevel.values()[idx];
+                for (CompressionLevel level : CompressionLevel.values()) {
+                    if (level.name().equals(levelStr)) {
+                        selLevel = level;
+                        break;
                     }
                 }
                 parameters.setCompressionLevel(selLevel);

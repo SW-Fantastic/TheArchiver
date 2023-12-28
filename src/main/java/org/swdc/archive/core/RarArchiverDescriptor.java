@@ -50,7 +50,7 @@ public class RarArchiverDescriptor implements ArchiveDescriptor {
 
     @Override
     public boolean creatable() {
-        return true;
+        return false;
     }
 
     @Override

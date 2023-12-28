@@ -154,7 +154,7 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
 
     @Override
     public boolean creatable() {
-        return false;
+        return true;
     }
 
     @Override
