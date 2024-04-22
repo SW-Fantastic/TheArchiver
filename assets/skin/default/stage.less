@@ -330,6 +330,27 @@
 
 }
 
+.password-view {
+
+    -fx-background-color: @background;
+
+    .password-field {
+        -fx-background-color: rgba(0,0,0,0);
+        -fx-border-style: solid;
+        -fx-border-color: linear-gradient(to bottom,@secondary, rgba(0,0,0,0),rgba(0,0,0,0), @secondary);
+        -fx-border-width: 1px;
+    }
+
+    .button {
+        -fx-background-color: @secondary;
+        -fx-text-fill:#FFF;
+        &:hover {
+            -fx-effect: dropshadow(three-pass-box, #CDCDCD, 8, 0.0, 0, 3);
+        }
+    }
+
+}
+
 .previews {
 
      -fx-background-color:#495057;

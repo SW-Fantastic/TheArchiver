@@ -14,11 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.swdc.archive.service.CommonService;
 import org.swdc.archive.views.ArchiveView;
+import org.swdc.archive.views.PasswordDialogView;
 import org.swdc.archive.views.ProgressView;
 import org.swdc.fx.FXResources;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -30,6 +30,114 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class SevenZipArchiver implements Archive<Integer,ArchiveEntry<Integer>> {
+
+    private class ExtractPasswordCallback extends ExtractCallback implements ICryptoGetTextPassword {
+
+        private String password;
+
+        public ExtractPasswordCallback(Map<Integer, ArchiveEntry<Integer>> extIds, File target, BiConsumer<String, Double> progressCallback) {
+            super(extIds, target, progressCallback);
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        @Override
+        public String cryptoGetTextPassword() throws SevenZipException {
+            return password;
+        }
+    }
+
+    private class ExtractCallback implements IArchiveExtractCallback {
+
+        private Map<Integer,ArchiveEntry<Integer>> extIds;
+
+        private Map<Integer, FileOutputStream> streamHashMap = new HashMap<>();
+
+        private BiConsumer<String, Double> progressCallback;
+
+        private File target;
+
+        private int idx = -1;
+        private int hash;
+        private int size;
+
+        private double resolved  = 0;
+
+
+        public ExtractCallback(Map<Integer,ArchiveEntry<Integer>> extIds, File target,BiConsumer<String, Double> progressCallback) {
+            this.extIds = extIds;
+            this.target = target;
+            this.progressCallback = progressCallback;
+        }
+
+        @Override
+        public ISequentialOutStream getStream(int i, ExtractAskMode extractAskMode) throws SevenZipException {
+            this.idx = i;
+            if (extractAskMode != ExtractAskMode.EXTRACT) {
+                return null;
+            }
+            return  data -> {
+                FileOutputStream fout = null;
+                if (streamHashMap.containsKey(idx)) {
+                    fout = streamHashMap.get(idx);
+                } else {
+                    try {
+                        File targetFile = getExtractTargetFile(extIds.get(idx),target);
+                        fout = new FileOutputStream(targetFile);
+                        streamHashMap.put(idx, fout);
+                    } catch (Exception e) {
+                        logger.error("failed to open output stream.", e);
+                    }
+                }
+                try {
+                    if (fout != null) {
+                        fout.write(data);
+                    }
+                } catch (Exception e) {
+                    logger.error("failed to write data to target file", e);
+                }
+                hash ^= Arrays.hashCode(data);
+                size += data.length;
+                return data.length; // Return amount of proceed data
+            };
+        }
+
+        @Override
+        public void prepareOperation(ExtractAskMode extractAskMode) throws SevenZipException {
+
+        }
+
+        @Override
+        public void setOperationResult(ExtractOperationResult extractOperationResult) throws SevenZipException {
+            if (extractOperationResult != ExtractOperationResult.OK) {
+                System.err.println("Extraction error");
+            } else {
+                try {
+                    if (streamHashMap.containsKey(idx)) {
+                        streamHashMap.remove(idx).close();
+                    }
+                } catch (Exception e) {
+                    logger.error("failed to release outputstream.");
+                }
+                progressCallback.accept(archive.getProperty(idx,PropID.PATH).toString(),resolved / extIds.size());
+                hash = 0;
+                size = 0;
+                resolved ++;
+            }
+        }
+
+        @Override
+        public void setTotal(long total) throws SevenZipException {
+
+        }
+
+        @Override
+        public void setCompleted(long complete) throws SevenZipException {
+
+        }
+    }
 
     private Logger logger  = LoggerFactory.getLogger(SevenZipArchiver.class);
 
@@ -346,80 +454,56 @@ public class SevenZipArchiver implements Archive<Integer,ArchiveEntry<Integer>> 
         Map<Integer,ArchiveEntry<Integer>> extIds = getAllExtractions(extract,null);
         openArchive((simpleInArchive, archive) -> {
             try {
-                archive.extract(extIds.keySet().stream().mapToInt(Integer::intValue).toArray(), false, new IArchiveExtractCallback() {
 
-                    private int idx = -1;
-                    private int hash;
-                    private int size;
-
-                    private double resolved  = 0;
-
-                    @Override
-                    public ISequentialOutStream getStream(int i, ExtractAskMode extractAskMode) throws SevenZipException {
-                        this.idx = i;
-                        if (extractAskMode != ExtractAskMode.EXTRACT) {
-                            return null;
-                        }
-                        return  data -> {
-                            FileOutputStream fout = null;
-                            if (streamHashMap.containsKey(idx)) {
-                                fout = streamHashMap.get(idx);
-                            } else {
-                                try {
-                                    File targetFile = getExtractTargetFile(extIds.get(idx),target);
-                                    fout = new FileOutputStream(targetFile);
-                                    streamHashMap.put(idx, fout);
-                                } catch (Exception e) {
-                                    logger.error("failed to open output stream.", e);
-                                }
-                            }
-                            try {
-                                if (fout != null) {
-                                    fout.write(data);
-                                }
-                            } catch (Exception e) {
-                                logger.error("failed to write data to target file", e);
-                            }
-                            hash ^= Arrays.hashCode(data);
-                            size += data.length;
-                            return data.length; // Return amount of proceed data
-                        };
+                boolean hasPassword = extIds.values().stream().filter(v -> v.getEntry() != null).map(i -> {
+                    try {
+                        return simpleInArchive.getArchiveItem(i.getEntry());
+                    } catch (Exception e) {
+                        return null;
                     }
-
-                    @Override
-                    public void prepareOperation(ExtractAskMode extractAskMode) throws SevenZipException {
-
-                    }
-
-                    @Override
-                    public void setOperationResult(ExtractOperationResult extractOperationResult) throws SevenZipException {
-                        if (extractOperationResult != ExtractOperationResult.OK) {
-                            System.err.println("Extraction error");
-                        } else {
-                            try {
-                                if (streamHashMap.containsKey(idx)) {
-                                    streamHashMap.remove(idx).close();
-                                }
-                            } catch (Exception e) {
-                                logger.error("failed to release outputstream.");
-                            }
-                            progressCallback.accept(archive.getProperty(idx,PropID.PATH).toString(),resolved / extIds.size());
-                            hash = 0;
-                            size = 0;
-                            resolved ++;
-                        }
-                    }
-
-                    @Override
-                    public void setTotal(long l) throws SevenZipException {
-
-                    }
-
-                    @Override
-                    public void setCompleted(long l) throws SevenZipException {
-
+                }).filter(Objects::nonNull).anyMatch(e -> {
+                    try {
+                        return e.isEncrypted();
+                    } catch (SevenZipException ex) {
+                        return false;
                     }
                 });
+
+                if (hasPassword) {
+                    Platform.runLater(() -> {
+                        PasswordDialogView passwordDialogView = archiveView.getView(PasswordDialogView.class);
+                        passwordDialogView.show();
+                        String pwd = passwordDialogView.getText();
+                        if (pwd.isBlank()) {
+                            ResourceBundle bundle = resources.getResourceBundle();
+                            Alert alert = archiveView.alert(
+                                    bundle.getString(ArchiveLangConstants.LangArchiveDialogFail),
+                                    bundle.getString(ArchiveLangConstants.LangArchiveEmptyPassword),
+                                    Alert.AlertType.ERROR
+                            );
+                            alert.showAndWait();
+                            return;
+                        }
+                        ExtractPasswordCallback pwdCallback = new ExtractPasswordCallback(extIds,target,progressCallback);
+                        pwdCallback.setPassword(pwd);
+                        resources.getExecutor().execute(() -> {
+                            try {
+                                archive.extract(
+                                        extIds.keySet().stream()
+                                                .mapToInt(Integer::intValue)
+                                                .toArray(), false, pwdCallback
+                                );
+                            } catch (SevenZipException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    });
+
+                } else {
+                    ExtractCallback callback = new ExtractCallback(extIds,target,progressCallback);
+                    archive.extract(extIds.keySet().stream().mapToInt(Integer::intValue).toArray(), false, callback);
+                }
+
             } catch (SevenZipException e) {
                 e.printStackTrace();
             }
@@ -535,14 +619,41 @@ public class SevenZipArchiver implements Archive<Integer,ArchiveEntry<Integer>> 
         return openArchive((simpleInArchive, archive) -> {
             try {
                 ByteArrayOutputStream bot = new ByteArrayOutputStream();
-                simpleInArchive.getArchiveItem(entry.getEntry()).extractSlow( dt -> {
-                    try {
-                        bot.write(dt);
-                        return dt.length;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                ISimpleInArchiveItem item = simpleInArchive.getArchiveItem(entry.getEntry());
+                if (item.isEncrypted()) {
+                    PasswordDialogView passwordDialogView = archiveView.getView(PasswordDialogView.class);
+                    passwordDialogView.show();
+                    String pwd = passwordDialogView.getText();
+                    if (pwd.isBlank()) {
+                        ResourceBundle bundle = resources.getResourceBundle();
+                        Alert alert = archiveView.alert(
+                                bundle.getString(ArchiveLangConstants.LangArchiveDialogFail),
+                                bundle.getString(ArchiveLangConstants.LangArchiveEmptyPassword),
+                                Alert.AlertType.ERROR
+                        );
+                        alert.showAndWait();
+                        return null;
+                    } else {
+                        item.extractSlow( dt -> {
+                            try {
+                                bot.write(dt);
+                                return dt.length;
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }, pwd);
                     }
-                });
+                } else {
+                    item.extractSlow( dt -> {
+                        try {
+                            bot.write(dt);
+                            return dt.length;
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
+
                 return new ByteArrayInputStream(bot.toByteArray());
             } catch (Exception ex ) {
                 return null;

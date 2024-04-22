@@ -5,6 +5,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.TreeItem;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.AbstractFileHeader;
 import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.ZipHeader;
 import net.lingala.zip4j.model.ZipParameters;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.swdc.archive.service.CommonService;
 import org.swdc.archive.views.ArchiveView;
+import org.swdc.archive.views.PasswordDialogView;
 import org.swdc.archive.views.ProgressView;
 import org.swdc.archive.views.viewer.StreamViewer;
 import org.swdc.fx.FXResources;
@@ -46,6 +48,8 @@ public class ZipArchiver implements Archive<FileHeader,ArchiveEntry<FileHeader>>
     private boolean multiple;
 
     private static Logger logger = LoggerFactory.getLogger(ZipArchiver.class);
+
+    private boolean passwordReady;
 
     public ZipArchiver(
             File file,
@@ -214,6 +218,24 @@ public class ZipArchiver implements Archive<FileHeader,ArchiveEntry<FileHeader>>
         if (header == null || header.isDirectory()) {
             return null;
         }
+        if (header.isEncrypted()) {
+            PasswordDialogView passwordDialogView = archiveView.getView(PasswordDialogView.class);
+            passwordDialogView.show();
+            String txt = passwordDialogView.getText();
+            if (txt.isBlank()) {
+                ResourceBundle bundle = resources.getResourceBundle();
+                Alert alert = archiveView.alert(
+                        bundle.getString(ArchiveLangConstants.LangArchiveDialogFail),
+                        bundle.getString(ArchiveLangConstants.LangArchiveEmptyPassword),
+                        Alert.AlertType.ERROR
+                );
+                alert.showAndWait();
+                return null;
+            }
+            zipFile.setPassword(txt.toCharArray());
+            this.passwordReady = true;
+        }
+
         try {
             return zipFile.getInputStream(header);
         } catch (Exception e) {
@@ -240,6 +262,34 @@ public class ZipArchiver implements Archive<FileHeader,ArchiveEntry<FileHeader>>
 
     @Override
     public void extract(List<ArchiveEntry<FileHeader>> extract, File target, BiConsumer<String, Double> callback) {
+        boolean hasPwd = extract.stream().map(ArchiveEntry::getEntry)
+                .filter(Objects::nonNull)
+                .anyMatch(AbstractFileHeader::isEncrypted);
+
+        if (hasPwd && !passwordReady) {
+            Platform.runLater(() -> {
+                PasswordDialogView passwordDialogView = archiveView.getView(PasswordDialogView.class);
+                passwordDialogView.show();
+                String txt = passwordDialogView.getText();
+                if (txt.isBlank()) {
+                    ResourceBundle bundle = resources.getResourceBundle();
+                    Alert alert = archiveView.alert(
+                            bundle.getString(ArchiveLangConstants.LangArchiveDialogFail),
+                            bundle.getString(ArchiveLangConstants.LangArchiveEmptyPassword),
+                            Alert.AlertType.ERROR
+                    );
+                    alert.showAndWait();
+                    return;
+                }
+                zipFile.setPassword(txt.toCharArray());
+                this.passwordReady = true;
+                resources.getExecutor().execute(() -> {
+                    this.extract(extract, target, callback);
+                });
+            });
+            return;
+        }
+
         for (int idx = 0; idx < extract.size(); idx++) {
             ArchiveEntry<FileHeader> ent = extract.get(idx);
             FileHeader entry = ent.getEntry();

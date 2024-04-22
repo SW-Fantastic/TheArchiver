@@ -54,4 +54,7 @@ public interface ArchiveLangConstants {
     String LangArchiveViewDecompressSelectedFolder = "archive.extract-selected-folder";
     String LangArchiveViewDecompressInto = "compress.decompress-target-location";
 
+    String LangArchiveDialogFail = "dialog.fail";
+    String LangArchiveEmptyPassword = "dialog.password-empty";
+
 }

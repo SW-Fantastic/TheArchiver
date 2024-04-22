@@ -4,7 +4,9 @@ import org.swdc.config.AbstractConfig;
 import org.swdc.config.annotations.Property;
 import org.swdc.fx.config.PropEditor;
 import org.swdc.fx.config.editors.NumberEditor;
+import org.swdc.fx.config.editors.PasswordEditor;
 import org.swdc.fx.config.editors.SelectionEditor;
+import org.swdc.fx.config.editors.TextEditor;
 
 import java.util.ResourceBundle;
 
@@ -17,6 +19,14 @@ public class ZipCompressConf extends AbstractConfig  {
             description = "%archive.zip.compress-method.desc",
             resource = "DEFLATE => DEFLATE,STORE => STORE")
     private String compressMethod = "DEFLATE";
+
+    @Property("compress-password")
+    @PropEditor(editor = PasswordEditor.class,
+            name = "%archive.zip.compress-password.name",
+            description = "%archive.zip.compress-password.desc"
+    )
+    private String password = "";
+
 
     @Property("compress-level")
     @PropEditor(editor = SelectionEditor.class,
@@ -52,4 +62,11 @@ public class ZipCompressConf extends AbstractConfig  {
         this.compressMethod = compressMethod;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

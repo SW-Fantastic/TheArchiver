@@ -318,6 +318,22 @@
 .helpview .tree-view .tree-cell:selected {
   -fx-background-color: #343a40;
 }
+.password-view {
+  -fx-background-color: #f7f7fc;
+}
+.password-view .password-field {
+  -fx-background-color: rgba(0, 0, 0, 0);
+  -fx-border-style: solid;
+  -fx-border-color: linear-gradient(to bottom, #a9affa, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0), #a9affa);
+  -fx-border-width: 1px;
+}
+.password-view .button {
+  -fx-background-color: #a9affa;
+  -fx-text-fill: #FFF;
+}
+.password-view .button:hover {
+  -fx-effect: dropshadow(three-pass-box, #cdcdcd, 8, 0, 0, 3);
+}
 .previews {
   -fx-background-color: #495057;
 }

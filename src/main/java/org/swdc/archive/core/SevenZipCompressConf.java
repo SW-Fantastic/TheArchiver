@@ -5,8 +5,16 @@ import org.swdc.config.annotations.Property;
 import org.swdc.fx.config.PropEditor;
 import org.swdc.fx.config.editors.CheckEditor;
 import org.swdc.fx.config.editors.NumberEditor;
+import org.swdc.fx.config.editors.PasswordEditor;
 
 public class SevenZipCompressConf extends AbstractConfig {
+
+    @Property("compress-password")
+    @PropEditor(editor = PasswordEditor.class,
+            name = "%archive.seven-zip.compress-password.name",
+            description = "%archive.seven-zip.compress-password.desc"
+    )
+    private String password = "";
 
     @Property("compress-level")
     @PropEditor(editor = NumberEditor.class,
@@ -63,5 +71,13 @@ public class SevenZipCompressConf extends AbstractConfig {
 
     public void setLevel(Integer level) {
         this.level = level;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

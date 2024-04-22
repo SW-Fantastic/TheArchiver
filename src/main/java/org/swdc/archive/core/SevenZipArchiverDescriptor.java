@@ -36,6 +36,25 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
 
     private FileChooser.ExtensionFilter filter = null;
 
+    public static class SevenZipCompressPasswordCallback extends SevenZipCompressCallback implements ICryptoGetTextPassword {
+
+        private String password;
+
+        public SevenZipCompressPasswordCallback(ResourceBundle resourceBundle, String path, List<File> files, BiConsumer<String, Double> callback) {
+            super(resourceBundle, path, files, callback);
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        @Override
+        public String cryptoGetTextPassword() throws SevenZipException {
+            return password;
+        }
+
+    }
+
     public static class SevenZipCompressCallback implements IOutCreateCallback<IOutItem7z> {
 
         private List<File> files;
@@ -201,18 +220,36 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
                             0
                     );
                     List<File> files = UIUtils.indexFolders(source);
-                    SevenZipCompressCallback callback = new SevenZipCompressCallback(bundle,source.getParent(), files, (path, percent) -> {
-                        progressView.update(
-                                bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
-                                path,
-                                percent
-                        );
-                    });
+
 
                     rout = new RandomAccessFile(targetFile, "rw");
                     createArchive7z = SevenZip.openOutArchive7z();
                     createArchive7z.setLevel(compressConf.getCompressLevel());
                     createArchive7z.setSolid(compressConf.getSolid());
+
+                    String password = compressConf.getPassword();
+                    SevenZipCompressCallback callback = null;
+                    if (!password.isBlank()) {
+                        createArchive7z.setHeaderEncryption(true);
+                        SevenZipCompressPasswordCallback pwdCallback = new SevenZipCompressPasswordCallback(bundle,source.getParent(), files, (path, percent) -> {
+                            progressView.update(
+                                    bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
+                                    path,
+                                    percent
+                            );
+                        });
+                        pwdCallback.setPassword(password);
+                        callback = pwdCallback;
+                    } else {
+                        callback = new SevenZipCompressCallback(bundle,source.getParent(), files, (path, percent) -> {
+                            progressView.update(
+                                    bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
+                                    path,
+                                    percent
+                            );
+                        });
+                    }
+
                     createArchive7z.createArchive(new RandomAccessFileOutStream(rout),files.size(),callback);
                 } catch (Exception e) {
                     logger.error("failed to create seven-zip file", e);

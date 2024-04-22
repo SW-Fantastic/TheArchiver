@@ -11,6 +11,7 @@ import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
+import net.lingala.zip4j.model.enums.EncryptionMethod;
 import net.lingala.zip4j.progress.ProgressMonitor;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.zip.Zip64Mode;
@@ -115,6 +116,8 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
         view.show();
         if (!view.isCanceled()) {
             ProgressView progressView = view.getView(ProgressView.class);
+            String password = compressConf.getPassword();
+
             File targetFile = new File(view.getTargetFolder() + File.separator + view.getFileName() + ".zip");
             File source = view.getSourcePath();
             if (targetFile.exists()) {
@@ -145,6 +148,12 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
                 parameters.setCompressionMethod(CompressionMethod.valueOf(compressConf.getCompressMethod()));
 
                 ZipFile zipFile = new ZipFile(targetFile);
+                if (!password.isBlank()) {
+                    zipFile.setPassword(password.toCharArray());
+                    zipFile.setUseUtf8CharsetForPasswords(true);
+                    parameters.setEncryptFiles(true);
+                    parameters.setEncryptionMethod(EncryptionMethod.ZIP_STANDARD);
+                }
                 zipFile.setCharset(StandardCharsets.UTF_8);
 
                 try {
