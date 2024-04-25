@@ -7,6 +7,7 @@ import javafx.stage.FileChooser;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.slf4j.Logger;
+import org.swdc.archive.core.steamed.TgzArchiver;
 import org.swdc.archive.service.CommonService;
 import org.swdc.archive.views.ArchiveView;
 import org.swdc.archive.views.CompressView;
@@ -53,7 +54,7 @@ public class GZipArchiverDescriptor implements ArchiveDescriptor {
             filter = new FileChooser.ExtensionFilter(
                     resources.getResourceBundle()
                             .getString(ArchiveLangConstants.LangGZipArchiveDisplayName),
-                    "*.gz"
+                    "*.gz","*.tgz"
             );
         }
         return filter;
@@ -66,6 +67,10 @@ public class GZipArchiverDescriptor implements ArchiveDescriptor {
 
     @Override
     public Archive open(ArchiveView view, File file) {
+        String name = file.getName().toLowerCase();
+        if (name.endsWith("tar.gz") || name.endsWith("tgz")) {
+            return new TgzArchiver(resources,file,view,commonService);
+        }
         return new GZipArchiver(resources,file,view,commonService);
     }
 

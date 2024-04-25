@@ -166,7 +166,9 @@ public class ArchiveView extends AbstractView {
              }
              treeView.setRoot(root);
              this.loadFile(root.getValue());
-             this.reOpenPath(treeView,path.substring(1));
+             if (!path.toString().isBlank()) {
+                 this.reOpenPath(treeView,path.substring(1));
+             }
          });
     }
 

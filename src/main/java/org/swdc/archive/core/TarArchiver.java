@@ -5,18 +5,16 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.TreeItem;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.archivers.tar.TarFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.swdc.archive.core.steamed.TheTarFile;
+import org.swdc.archive.core.steamed.TheTgzFile;
 import org.swdc.archive.service.CommonService;
 import org.swdc.archive.views.ArchiveView;
 import org.swdc.archive.views.ProgressView;
 import org.swdc.fx.FXResources;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -25,17 +23,17 @@ import java.util.stream.Collectors;
 
 public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArchiveEntry>> {
 
-    private File tarFile = null;
+    protected File tarFile = null;
 
-    private TarFile tar = null;
+    protected TheTarFile tar = null;
 
-    private ArchiveView view;
+    protected ArchiveView view;
 
-    private CommonService commonService;
+    protected CommonService commonService;
 
-    private FXResources resources;
+    protected FXResources resources;
 
-    private Logger logger = LoggerFactory.getLogger(TarArchiver.class);
+    protected Logger logger = LoggerFactory.getLogger(TarArchiver.class);
 
     public TarArchiver(FXResources resources,ArchiveView view,File file,CommonService commonService) {
 
@@ -45,7 +43,7 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
         this.commonService = commonService;
 
         try {
-            tar = new TarFile(file);
+            tar = getTarFile(file);
             view.archiver(this);
         } catch (Exception e) {
             this.close();
@@ -61,6 +59,18 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
             logger.error("failed to open tar archive file", e);
         }
 
+    }
+
+    protected TheTarFile getTarFile(File file) throws IOException {
+        return new TheTarFile(file);
+    }
+
+    protected TarArchiveOutputStream createOutputStream(File file) throws IOException {
+        return new TarArchiveOutputStream(new FileOutputStream(file));
+    }
+
+    protected String getExtension() {
+        return "tar";
     }
 
     @Override
@@ -134,7 +144,7 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
                 if (tarArchiveEntry != null) {
                     File outFile = getExtractTargetFile(entry,target);
                     progressCallback.accept(outFile.getAbsolutePath(), ((double)idx) / extract.size());
-                    InputStream inputStream = tar.getInputStream(tarArchiveEntry);
+                    InputStream inputStream = tar.createInputStream(tarArchiveEntry);
                     FileOutputStream outputStream = new FileOutputStream(outFile);
                     byte[] buf = new byte[1024 * 1024];
                     double len = tarArchiveEntry.getSize();
@@ -177,8 +187,7 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
 
             try {
                 File out = new File(tarFile.getAbsolutePath() + ".tmp");
-                FileOutputStream fos = new FileOutputStream(out);
-                TarArchiveOutputStream tos = new TarArchiveOutputStream(fos);
+                TarArchiveOutputStream tos = createOutputStream(out);
                 List<TarArchiveEntry> entries = tar.getEntries();
 
                 double size = entries.size();
@@ -186,7 +195,7 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
 
                 for (TarArchiveEntry e: entries) {
                     tos.putArchiveEntry(e);
-                    tos.write(tar.getInputStream(e).readAllBytes());
+                    tos.write(tar.createInputStream(e).readAllBytes());
                     tos.closeArchiveEntry();
                     curr ++;
                     progressView.update(
@@ -195,7 +204,7 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
                             curr / size
                     );
                 }
-                String path = UIUtils.generateFileInArchivePath(targetFolderEntry,"tar",item);
+                String path = UIUtils.generateFileInArchivePath(targetFolderEntry,getExtension(),item);
                 FileInputStream fileInputStream = new FileInputStream(item);
 
                 var entry = tos.createArchiveEntry(item,path);
@@ -203,14 +212,13 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
                 tos.write(fileInputStream.readAllBytes());
                 tos.closeArchiveEntry();
                 tos.close();
-                fos.close();
 
                 fileInputStream.close();
 
                 this.close();
                 tarFile.delete();
                 out.renameTo(tarFile);
-                tar = new TarFile(tarFile);
+                tar = new TheTarFile(tarFile);
 
                 Platform.runLater(() -> {
                     view.getView().setDisable(false);
@@ -248,14 +256,13 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
 
             List<String> archiveEntries = removeEntities.stream()
                     .map(e -> e.getEntry() != null ? e.getEntry().getName() :
-                            UIUtils.generateEntryInArchivePath(e,"tar"))
+                            UIUtils.generateEntryInArchivePath(e,getExtension()))
                     .distinct()
                     .collect(Collectors.toList());
 
             try {
                 File out = new File(tarFile.getAbsolutePath() + ".tmp");
-                FileOutputStream fos = new FileOutputStream(out);
-                TarArchiveOutputStream tos = new TarArchiveOutputStream(fos);
+                TarArchiveOutputStream tos = createOutputStream(out);
                 List<TarArchiveEntry> entries = tar.getEntries();
 
                 double size = entries.size() - removeEntities.size();
@@ -266,7 +273,7 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
                         continue;
                     }
                     tos.putArchiveEntry(e);
-                    tos.write(tar.getInputStream(e).readAllBytes());
+                    tos.write(tar.createInputStream(e).readAllBytes());
                     tos.closeArchiveEntry();
                     curr ++;
                     progressView.update(
@@ -277,13 +284,12 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
                 }
 
                 tos.close();
-                fos.close();
 
                 this.close();
                 tarFile.delete();
 
                 out.renameTo(tarFile);
-                tar = new TarFile(tarFile);
+                tar = getTarFile(tarFile);
 
                 Platform.runLater(() -> {
                     view.getView().setDisable(false);
@@ -319,6 +325,18 @@ public class TarArchiver implements Archive<TarArchiveEntry,ArchiveEntry<TarArch
     @Override
     public void saveFile() {
 
+    }
+
+    @Override
+    public InputStream getInputStream(ArchiveEntry<TarArchiveEntry> entry) {
+        if (entry != null && entry.getEntry() != null) {
+            try {
+                return tar.createInputStream(entry.getEntry());
+            } catch (Exception e){
+                return null;
+            }
+        }
+        return null;
     }
 
     @Override

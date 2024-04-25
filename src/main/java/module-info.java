@@ -82,5 +82,6 @@ module archiver {
             swdc.application.dependency,
             com.fasterxml.jackson.databind,
             swdc.application.fx;
+    opens org.swdc.archive.core.steamed to javafx.controls, javafx.fxml, org.controlsfx.controls, swdc.application.configs, swdc.application.dependency, swdc.application.fx;
 
 }

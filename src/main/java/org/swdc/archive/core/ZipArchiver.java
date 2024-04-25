@@ -133,7 +133,7 @@ public class ZipArchiver implements Archive<FileHeader,ArchiveEntry<FileHeader>>
         }
 
 
-        Function<FileHeader,ArchiveEntry<FileHeader>> resolveFolder = (FileHeader entry) -> {
+        Function<FileHeader,ArchiveEntry<FileHeader>> resolveFolder = (entry) -> {
 
             String path = utfName(entry);
             String[] parts = path.split("/");
