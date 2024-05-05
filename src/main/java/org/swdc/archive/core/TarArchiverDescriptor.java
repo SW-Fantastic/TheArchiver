@@ -80,7 +80,7 @@ public class TarArchiverDescriptor implements ArchiveDescriptor{
         view.show();
         if (!view.isCanceled()) {
             File targetFile = new File(view.getTargetFolder() + File.separator + view.getFileName() + ".tar");
-            File source = view.getSourcePath();
+            List<File> sources = view.getCompressSource();
             if (targetFile.exists()) {
                 Alert alert = view.alert(
                         bundle.getString(ArchiveLangConstants.LangArchiveMessageTitle),
@@ -103,80 +103,84 @@ public class TarArchiverDescriptor implements ArchiveDescriptor{
                 );
                 progressView.show();
 
+
                 try {
-                    if (source.isDirectory()) {
-                        List<File> files = UIUtils.indexFolders(source);
 
-                        FileOutputStream fos = new FileOutputStream(targetFile);
-                        TarArchiveOutputStream tarArchiveOutputStream = new TarArchiveOutputStream(fos);
-                        tarArchiveOutputStream.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+                    FileOutputStream fos = new FileOutputStream(targetFile);
+                    TarArchiveOutputStream tarArchiveOutputStream = new TarArchiveOutputStream(fos);
+                    tarArchiveOutputStream.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
 
-                        double curr = 0;
-                        for (File file: files) {
-                            if (file.isDirectory()) {
-                                curr ++;
-                                continue;
-                            }
-                            try {
-                                String path = Paths.get(source.getParent())
-                                        .relativize(file.toPath())
-                                        .normalize()
-                                        .toString();
-                                if (path.startsWith("..")) {
-                                    path = path.replace("..", "");
+                    for (File source: sources) {
+                        if (source.isDirectory()) {
+                            List<File> files = UIUtils.indexFolders(source);
+
+                            double curr = 0;
+                            for (File file: files) {
+                                if (file.isDirectory()) {
+                                    curr ++;
+                                    continue;
                                 }
+                                try {
+                                    String path = Paths.get(source.getParent())
+                                            .relativize(file.toPath())
+                                            .normalize()
+                                            .toString();
+                                    if (path.startsWith("..")) {
+                                        path = path.replace("..", "");
+                                    }
 
-                                FileInputStream fileInputStream = new FileInputStream(file);
-                                ArchiveEntry entry = tarArchiveOutputStream.createArchiveEntry(file, path);
-                                tarArchiveOutputStream.putArchiveEntry(entry);
-                                tarArchiveOutputStream.write(fileInputStream.readAllBytes());
-                                tarArchiveOutputStream.closeArchiveEntry();
-                                fileInputStream.close();
+                                    FileInputStream fileInputStream = new FileInputStream(file);
+                                    ArchiveEntry entry = tarArchiveOutputStream.createArchiveEntry(file, path);
+                                    tarArchiveOutputStream.putArchiveEntry(entry);
+                                    tarArchiveOutputStream.write(fileInputStream.readAllBytes());
+                                    tarArchiveOutputStream.closeArchiveEntry();
+                                    fileInputStream.close();
 
-                                curr ++;
+                                    curr ++;
+                                    progressView.update(
+                                            bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
+                                            path,
+                                            curr / files.size()
+                                    );
+                                } catch (Exception e) {
+                                    logger.error("error on process file: " + file.getAbsolutePath(), e);
+                                }
+                            }
+
+
+                        } else {
+                            FileInputStream fin = new FileInputStream(source);
+                            ArchiveEntry entry = tarArchiveOutputStream.createArchiveEntry(source,source.getName());
+                            tarArchiveOutputStream.putArchiveEntry(entry);
+                            double size = source.length();
+                            double curr = 0;
+                            byte[] buf = new byte[1024 * 1024];
+                            int readSize = 0;
+                            while ((readSize = fin.read(buf)) != -1) {
+                                tarArchiveOutputStream.write(buf,0,readSize);
+                                curr = curr + readSize;
                                 progressView.update(
                                         bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
-                                        path,
-                                        curr / files.size()
+                                        source.getName(),
+                                        curr / size
                                 );
-                            } catch (Exception e) {
-                                logger.error("error on process file: " + file.getAbsolutePath(), e);
                             }
+                            tarArchiveOutputStream.closeArchiveEntry();
+                            fin.close();
                         }
-
-                        tarArchiveOutputStream.close();
-                        fos.close();
-
-                    } else {
-                        FileInputStream fin = new FileInputStream(source);
-                        FileOutputStream fos = new FileOutputStream(targetFile);
-                        TarArchiveOutputStream tarArchiveOutputStream = new TarArchiveOutputStream(fos);
-                        tarArchiveOutputStream.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
-                        ArchiveEntry entry = tarArchiveOutputStream.createArchiveEntry(source,source.getName());
-                        tarArchiveOutputStream.putArchiveEntry(entry);
-                        double size = source.length();
-                        double curr = 0;
-                        byte[] buf = new byte[1024 * 1024];
-                        int readSize = 0;
-                        while ((readSize = fin.read(buf)) != -1) {
-                            tarArchiveOutputStream.write(buf);
-                            curr = curr + readSize;
-                            progressView.update(
-                                    bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
-                                    source.getName(),
-                                    curr / size
-                            );
-                        }
-                        tarArchiveOutputStream.closeArchiveEntry();
-                        tarArchiveOutputStream.close();
-                        fos.close();
-                        fin.close();
                     }
+
+                    tarArchiveOutputStream.close();
+                    fos.close();
+
+
                 } catch (Exception e) {
                     logger.error("error on creating tar file",e);
                 } finally {
                     progressView.hide();
                 }
+
+
 
             });
         }

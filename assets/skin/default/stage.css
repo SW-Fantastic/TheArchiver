@@ -51,6 +51,17 @@
 .compress-view .button-bar .button:hover {
   -fx-effect: dropshadow(three-pass-box, #cdcdcd, 8, 0, 0, 3);
 }
+.compress-view .tree-view {
+  -fx-background-color: rgba(0, 0, 0, 0);
+  -fx-border-color: #a9affa;
+  -fx-border-width: 1;
+  -fx-border-style: dashed;
+  -fx-border-radius: 8;
+}
+.compress-view .tree-view .cell:selected {
+  -fx-text-background-color: #FFF;
+  -fx-background-color: #c0bce3;
+}
 .compress-view .prop-sheet {
   -fx-background: rgba(255, 255, 255, 0);
 }

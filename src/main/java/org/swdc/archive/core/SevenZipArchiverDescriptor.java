@@ -30,6 +30,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @MultipleImplement(ArchiveDescriptor.class)
 public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
@@ -40,8 +41,8 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
 
         private String password;
 
-        public SevenZipCompressPasswordCallback(ResourceBundle resourceBundle, String path, List<File> files, BiConsumer<String, Double> callback) {
-            super(resourceBundle, path, files, callback);
+        public SevenZipCompressPasswordCallback(ResourceBundle resourceBundle, List<ArchiveSource> files, BiConsumer<String, Double> callback) {
+            super(resourceBundle, files, callback);
         }
 
         public void setPassword(String password) {
@@ -57,18 +58,16 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
 
     public static class SevenZipCompressCallback implements IOutCreateCallback<IOutItem7z> {
 
-        private List<File> files;
-        private String baseDir;
+        private List<ArchiveSource> files;
         private BiConsumer<String,Double> progressCb;
 
         private long total = 0;
         private String curr;
         private ResourceBundle bundle;
 
-        public SevenZipCompressCallback(ResourceBundle resourceBundle ,String path, List<File> files, BiConsumer<String, Double> callback) {
+        public SevenZipCompressCallback(ResourceBundle resourceBundle ,List<ArchiveSource> files, BiConsumer<String, Double> callback) {
             this.files = files;
             this.progressCb = callback;
-            this.baseDir = path;
             this.bundle = resourceBundle;
         }
 
@@ -77,12 +76,48 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
 
         }
 
+        private ArchiveSource getSource(int itemIndex) {
+            int curr = 0;
+            for (int idx = 0; idx < files.size(); idx ++) {
+                ArchiveSource source = files.get(idx);
+                curr = curr + source.getFiles().size();
+                if (curr > itemIndex) {
+                    return source;
+                }
+            }
+            return null;
+        }
+
+        private int getSourceIndex(int itemIndex) {
+            int curr = 0;
+            for (int idx = 0; idx < files.size(); idx ++) {
+                ArchiveSource source = files.get(idx);
+                if (itemIndex > curr) {
+                    curr = curr + source.getFiles().size();
+                } else {
+                    return curr - itemIndex;
+                }
+            }
+            return -1;
+        }
+
         @Override
         public IOutItem7z getItemInformation(int i, OutItemFactory<IOutItem7z> outItemFactory) throws SevenZipException {
-            File file = files.get(i);
+            ArchiveSource source = getSource(i);
+            if (source == null) {
+                return null;
+            }
+            int index = getSourceIndex(i);
+            if (index < 0) {
+                return null;
+            }
+            File file = source.getFiles().get(index);
             IOutItem7z item = outItemFactory.createOutItem();
             item.setPropertyIsDir(file.isDirectory());
-            String path = Paths.get(baseDir)
+            String path = source.getParent()
+                    .getParentFile()
+                    .toPath()
+                    .toAbsolutePath()
                     .relativize(file.toPath())
                     .normalize()
                     .toString();
@@ -96,8 +131,20 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
 
         @Override
         public ISequentialInStream getStream(int i) throws SevenZipException {
-            File file = files.get(i);
-            String path = Paths.get(baseDir)
+            ArchiveSource source = getSource(i);
+            if (source == null) {
+                return null;
+            }
+            int index = getSourceIndex(i);
+            if (index < 0) {
+                return null;
+            }
+            File file = source.getFiles().get(index);
+            String path = source
+                    .getParent()
+                    .getParentFile()
+                    .toPath()
+                    .toAbsolutePath()
                     .relativize(file.toPath())
                     .normalize()
                     .toString();
@@ -190,13 +237,15 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
         sheet.setSearchBoxVisible(false);
         sheet.setModeSwitcherVisible(false);
         sheet.getStyleClass().add("prop-sheet");
-        compressView.setCenter(sheet);
+
+        BorderPane content = (BorderPane) compressView.getCenter();
+        content.setCenter(sheet);
 
         view.show();
         if (!view.isCanceled()) {
             ProgressView progressView = view.getView(ProgressView.class);
             File targetFile = new File(view.getTargetFolder() + File.separator + view.getFileName() + ".7z");
-            File source = view.getSourcePath();
+            List<File> sources = view.getCompressSource();
             if (targetFile.exists()) {
                 Alert alert = view.alert(
                         bundle.getString(ArchiveLangConstants.LangArchiveMessageTitle),
@@ -210,6 +259,15 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
                 targetFile.delete();
             }
             executor.execute(() -> {
+
+                List<ArchiveSource> files = sources.stream().map(ArchiveSource::new)
+                        .collect(Collectors.toList());
+
+                int count = files.stream()
+                        .mapToInt(f -> f.getFiles().size())
+                        .reduce(Integer::sum)
+                        .getAsInt();
+
                 progressView.show();
                 RandomAccessFile rout = null;
                 IOutCreateArchive7z createArchive7z = null;
@@ -219,7 +277,7 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
                             bundle.getString(ArchiveLangConstants.LangArchiveIndexing),
                             0
                     );
-                    List<File> files = UIUtils.indexFolders(source);
+                   // List<File> files = UIUtils.indexFolders(source);
 
 
                     rout = new RandomAccessFile(targetFile, "rw");
@@ -231,7 +289,7 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
                     SevenZipCompressCallback callback = null;
                     if (!password.isBlank()) {
                         createArchive7z.setHeaderEncryption(true);
-                        SevenZipCompressPasswordCallback pwdCallback = new SevenZipCompressPasswordCallback(bundle,source.getParent(), files, (path, percent) -> {
+                        SevenZipCompressPasswordCallback pwdCallback = new SevenZipCompressPasswordCallback(bundle, files, (path, percent) -> {
                             progressView.update(
                                     bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
                                     path,
@@ -241,7 +299,7 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
                         pwdCallback.setPassword(password);
                         callback = pwdCallback;
                     } else {
-                        callback = new SevenZipCompressCallback(bundle,source.getParent(), files, (path, percent) -> {
+                        callback = new SevenZipCompressCallback(bundle,files, (path, percent) -> {
                             progressView.update(
                                     bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
                                     path,
@@ -250,7 +308,7 @@ public class SevenZipArchiverDescriptor implements ArchiveDescriptor {
                         });
                     }
 
-                    createArchive7z.createArchive(new RandomAccessFileOutStream(rout),files.size(),callback);
+                    createArchive7z.createArchive(new RandomAccessFileOutStream(rout),count,callback);
                 } catch (Exception e) {
                     logger.error("failed to create seven-zip file", e);
                 } finally {

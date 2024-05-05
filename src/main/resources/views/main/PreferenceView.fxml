@@ -5,8 +5,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-
-<BorderPane id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="454.0" prefWidth="525.0" styleClass="pref-view" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swdc.archive.views.controller.PreferenceController">
+<BorderPane id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="454.0" prefWidth="525.0" styleClass="pref-view" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swdc.archive.views.controller.PreferenceController">
    <bottom>
       <HBox alignment="CENTER_RIGHT" prefHeight="72.0" prefWidth="525.0" spacing="12.0">
          <padding>
@@ -18,4 +17,7 @@
          </children>
       </HBox>
    </bottom>
+   <padding>
+      <Insets top="24.0" />
+   </padding>
 </BorderPane>

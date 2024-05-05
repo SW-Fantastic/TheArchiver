@@ -111,15 +111,18 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
         sheet.setSearchBoxVisible(false);
         sheet.setModeSwitcherVisible(false);
         sheet.getStyleClass().add("prop-sheet");
-        compressView.setCenter(sheet);
+
+        BorderPane content = (BorderPane) compressView.getCenter();
+        content.setCenter(sheet);
 
         view.show();
-        if (!view.isCanceled()) {
+        List<File> files = view.getCompressSource();
+        if (!view.isCanceled() && !files.isEmpty()) {
             ProgressView progressView = view.getView(ProgressView.class);
             String password = compressConf.getPassword();
 
             File targetFile = new File(view.getTargetFolder() + File.separator + view.getFileName() + ".zip");
-            File source = view.getSourcePath();
+            //File source = view.getSourcePath();
             if (targetFile.exists()) {
                 Alert alert = view.alert(
                         bundle.getString(ArchiveLangConstants.LangArchiveMessageTitle),
@@ -160,10 +163,12 @@ public class ZipArchiverDescriptor implements ArchiveDescriptor {
                     ProgressMonitor monitor = zipFile.getProgressMonitor();
                     zipFile.setRunInThread(true);
 
-                    if (source.isFile()) {
-                        zipFile.addFile(source,parameters);
-                    } else {
-                        zipFile.addFolder(source,parameters);
+                    for (File item: files) {
+                        if (item.isDirectory()) {
+                            zipFile.addFile(item);
+                        } else {
+                            zipFile.addFolder(item);
+                        }
                     }
 
                     double prog = 0.0;

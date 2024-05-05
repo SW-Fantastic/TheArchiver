@@ -6,6 +6,7 @@ import javafx.scene.control.ButtonType;
 import javafx.stage.FileChooser;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.slf4j.Logger;
 import org.swdc.archive.core.steamed.TgzArchiver;
 import org.swdc.archive.service.CommonService;
@@ -22,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 @MultipleImplement(ArchiveDescriptor.class)
@@ -79,12 +81,17 @@ public class GZipArchiverDescriptor implements ArchiveDescriptor {
         view.show();
         ResourceBundle bundle = resources.getResourceBundle();
         if (!view.isCanceled()) {
-            File source = view.getSourcePath();
-            String[] names = source.getName().split("[.]");
+            List<File> sources = view.getCompressSource();
+            File folder = view.getTargetFolder();
+            String name = folder.getName();
+            if (sources.size() == 1) {
+                name = sources.get(0).getName();
+            }
+            String[] names = name.split("[.]");
             File targetFile = new File(view.getTargetFolder() +
                     File.separator + view.getFileName() +
                     (names.length > 1 ? "." + names[names.length - 1] : "") +
-                    (source.isDirectory() ? ".tar.gz": ".gz"));
+                    (sources.size() > 1 ? ".tar.gz": ".gz"));
             if (targetFile.exists()) {
                 Alert alert = view.alert(
                         bundle.getString(ArchiveLangConstants.LangArchiveMessageTitle),
@@ -98,7 +105,7 @@ public class GZipArchiverDescriptor implements ArchiveDescriptor {
                 targetFile.delete();
             }
 
-            if (source.isDirectory()) {
+            if (sources.size() > 1) {
 
                 commonService.submit(() -> {
                     ProgressView progressView = view.getView(ProgressView.class);
@@ -110,41 +117,50 @@ public class GZipArchiverDescriptor implements ArchiveDescriptor {
                     progressView.show();
                     try {
 
-                        List<File> files = UIUtils.indexFolders(source);
+                        List<ArchiveSource> files = sources.stream().map(ArchiveSource::new).collect(Collectors.toList());
+                        int count = files.stream()
+                                .mapToInt(f -> f.getFiles().size())
+                                .reduce(Integer::sum)
+                                .getAsInt();
+
+
                         double hasArchived = 0;
 
                         FileOutputStream fos = new FileOutputStream(targetFile);
-                        GZIPOutputStream gout = new GZIPOutputStream(fos);
+                        GzipCompressorOutputStream gout = new GzipCompressorOutputStream(fos);
                         TarArchiveOutputStream tout = new TarArchiveOutputStream(gout);
                         tout.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
 
-                        for (File item: files) {
+                        for (ArchiveSource item: files) {
                            try {
-                               if (item.isDirectory()) {
+                               for (File itemFile: item.getFiles()) {
+                                   if (itemFile.isDirectory()) {
+                                       hasArchived ++;
+                                       continue;
+                                   }
+                                   String path = item.getParent().toPath().toAbsolutePath()
+                                           .relativize(itemFile.toPath())
+                                           .normalize()
+                                           .toString();
+                                   if (path.startsWith("..")) {
+                                       path = path.replace("..", "");
+                                   }
+                                   ArchiveEntry entry = tout.createArchiveEntry(itemFile,path);
+                                   tout.putArchiveEntry(entry);
+                                   FileInputStream fin = new FileInputStream(itemFile);
+                                   tout.write(fin.readAllBytes());
+                                   tout.closeArchiveEntry();
+                                   fin.close();
                                    hasArchived ++;
-                                   continue;
+                                   progressView.update(
+                                           bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
+                                           path,
+                                           hasArchived / count
+                                   );
                                }
-                               String path = Paths.get(source.getParent())
-                                       .relativize(item.toPath())
-                                       .normalize()
-                                       .toString();
-                               if (path.startsWith("..")) {
-                                   path = path.replace("..", "");
-                               }
-                               ArchiveEntry entry = tout.createArchiveEntry(item,path);
-                               tout.putArchiveEntry(entry);
-                               FileInputStream fin = new FileInputStream(item);
-                               tout.write(fin.readAllBytes());
-                               tout.closeArchiveEntry();
-                               fin.close();
-                               hasArchived ++;
-                               progressView.update(
-                                       bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
-                                       path,
-                                       hasArchived / files.size()
-                               );
+
                            } catch (Exception e) {
-                               e.printStackTrace();
+                              logger.error("failed to create gzip file", e);
                            }
                         }
 
@@ -169,6 +185,9 @@ public class GZipArchiverDescriptor implements ArchiveDescriptor {
                 );
                 commonService.submit(() -> {
                     try {
+
+                        File source = sources.get(0);
+
                         progressView.show();
                         FileInputStream fin = new FileInputStream(source);
                         FileOutputStream fos = new FileOutputStream(targetFile);

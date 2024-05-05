@@ -20,7 +20,7 @@
     .increment-arrow{
         -fx-background-color: @nothing;
     }
-   }
+}
 
 .comb(){
     -fx-background-color: #FFF;
@@ -109,6 +109,7 @@
         -fx-border-color: linear-gradient(to bottom,@secondary, rgba(0,0,0,0),rgba(0,0,0,0), @secondary);
         -fx-border-width: 1px;
     }
+
     .icon-button {
         -fx-background-color: rgba(0,0,0,0);
         -fx-text-fill:@secondary;
@@ -125,6 +126,18 @@
                 -fx-effect: dropshadow(three-pass-box, #CDCDCD, 8, 0.0, 0, 3);
             }
        }
+    }
+
+    .tree-view {
+        -fx-background-color: @nothing;
+        -fx-border-color: @secondary;
+        -fx-border-width: 1;
+        -fx-border-style: dashed;
+        -fx-border-radius: 8;
+        .cell:selected {
+            -fx-text-background-color: #FFF;
+            -fx-background-color:@primary;
+        }
     }
 
     .prop-sheet {
