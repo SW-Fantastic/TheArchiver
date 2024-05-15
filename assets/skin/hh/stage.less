@@ -1,0 +1,449 @@
+@background:#ede4df;
+@primary: #C0BCE3;
+@secondary: #e5f8f2;
+@secondary-half: rgba(229,248,242,0.4);
+@textColor: #0c1417;
+@textColor-half: rgba(12,20,23,0.4);
+@menu: #4d7e7b;
+@nothing: rgba(0,0,0,0);
+@table-bg: #4a6e60;
+
+.scroll-bar {
+    -fx-font-size: 10;
+    -fx-background-color:@nothing;
+    .track {
+        -fx-background-color:@nothing;
+        -fx-background-radius: 99;
+    }
+    .thumb {
+        -fx-background-color:@background;
+        -fx-effect:dropshadow(three-pass-box,@primary,10,0,0,0);
+    }
+    .decrement-arrow {
+        -fx-background-color: @nothing;
+    }
+    .increment-arrow{
+        -fx-background-color: @nothing;
+    }
+}
+
+.comb(){
+    -fx-background-color: #FFF;
+    -fx-prompt-text-fill: rgba(120,106,123, 0.6) ;
+    -fx-text-fill: @table-bg;
+    -fx-border-color: @table-bg;
+    -fx-border-width: 0;
+    -fx-effect: dropshadow(three-pass-box,@secondary, 6, 0, 0, 0);
+    -fx-font-size: 15;
+    * {
+      -fx-text-fill: @table-bg;
+      .label{
+        -fx-font-size: 15;
+      }
+    }
+    .combo-box-popup, .list-view{
+      -fx-background-color: @background;
+      .list-cell:filled{
+        &:selected {
+          -fx-text-fill:#FFF;
+          -fx-background-color: @table-bg;
+        }
+        &:hover,&:focus {
+          -fx-background-color:@menu;
+          -fx-text-fill: #FFF;
+        }
+      }
+    }
+}
+
+.prop-sheet() {
+    -fx-text-fill: @table-bg;
+    -fx-background: rgba(255,255,255,0);
+    .text-field {
+        -fx-background-color: rgba(0,0,0,0);
+        -fx-border-style: solid;
+        -fx-border-color: @table-bg;
+        -fx-border-width: 0 0 1 0;
+    }
+    .slider .thumb{
+        -fx-background-color:@table-bg;
+        -fx-effect:dropshadow(three-pass-box, @table-bg,10,0,0,0);
+    }
+    .slider .track {
+        -fx-background-color:@background;
+        -fx-border-radius: 99;
+        -fx-border-width: 1px;
+        -fx-border-color:@table-bg;
+    }
+    .check-box {
+        .box {
+            -fx-background-color:@background;
+            -fx-border-width: 1px;
+            -fx-border-color:@table-bg;
+            &:selected .mark  {
+                -fx-background-color:@table-bg;
+            }
+        }
+    }
+    .combo-box {
+        .comb();
+    }
+}
+
+.notification-bar {
+    .pane {
+      -fx-background-color: @background !important;
+      -fx-padding: 12;
+      -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.4), 11, 0.0, 0, 3);
+      -fx-background-insets: 0, 1, 2;
+      .label {
+        -fx-font-family: 'Source Han Sans CN Normal';
+        -fx-font-size: 16px;
+      }
+    }
+}
+
+.startPane {
+    -fx-background-image: url(./startBg.png);
+    -fx-background-size: cover;
+    .label {
+        -fx-text-fill: #FFF;
+    }
+}
+
+.compress-view {
+
+    -fx-font-family: 'Source Han Sans CN Normal';
+    -fx-font-size: 14;
+    -fx-background-color: @background;
+
+    .input-text {
+        -fx-background-color: rgba(0,0,0,0);
+        -fx-border-style: solid;
+        -fx-border-color: @table-bg;
+        -fx-border-width: 0 0 1 0;
+    }
+
+    .icon-button {
+        -fx-background-color: rgba(0,0,0,0);
+        -fx-text-fill:@table-bg;
+        &:hover {
+            -fx-effect: dropshadow(three-pass-box, #CDCDCD, 8, 0.0, 0, 3);
+        }
+    }
+
+    .button-bar {
+        .button {
+            -fx-background-color: @menu;
+            -fx-text-fill:#FFF;
+            &:hover {
+                -fx-effect: dropshadow(three-pass-box, #CDCDCD, 8, 0.0, 0, 3);
+            }
+       }
+    }
+
+    .tree-view {
+        -fx-background-color: @nothing;
+        -fx-border-color: @table-bg;
+        -fx-border-width: 1;
+        -fx-border-style: dashed;
+        -fx-border-radius: 8;
+        .cell:selected {
+            -fx-text-background-color: #FFF;
+            -fx-background-color:@table-bg;
+        }
+    }
+
+    .prop-sheet {
+        .prop-sheet();
+    }
+
+}
+
+.pref-view {
+
+    -fx-font-family: 'Source Han Sans CN Normal';
+    -fx-font-size: 14;
+    -fx-background-color: @background;
+
+    .button {
+        -fx-background-color: @menu;
+        -fx-text-fill:#FFF;
+        &:hover {
+            -fx-effect: dropshadow(three-pass-box, #CDCDCD, 8, 0.0, 0, 3);
+        }
+    }
+
+    .prop-sheet {
+        .prop-sheet();
+    }
+}
+
+.main-view {
+
+    -fx-font-family: 'Source Han Sans CN Normal';
+    -fx-font-size: 14;
+    -fx-background-color: @background;
+
+    .menu-bar {
+        -fx-background-color: @nothing;
+        -fx-border-width: 0 0 2 0;
+        -fx-border-style: dotted;
+        -fx-border-color: @menu;
+
+        .menu-button:showing,
+        .menu-button:focused,
+        .menu-button:hover {
+            -fx-background-color: @menu;
+        }
+        .menu-item {
+            &:focused {
+                -fx-background-color: @menu;
+            }
+        }
+    }
+
+    .controlPane {
+        -fx-background-image: url(./compBar.png);
+        -fx-background-size: cover;
+        -fx-background-repeat:no-repeat;
+    }
+
+    .center-pane {
+
+        &.table-view {
+
+            -fx-table-cell-border-color: rgba(0,0,0,0);
+
+            .column-header{
+                
+                -fx-border-color: #343a40;
+                -fx-border-width: 0 0 1 0;
+                -fx-border-style: solid;
+                
+                .label {
+                    -fx-text-fill: #FFF;
+                }
+                -fx-background-color:@table-bg;
+            }
+
+            .table-row-cell {
+
+                -fx-background-color:@table-bg;
+                -fx-table-cell-border-color: rgba(0,0,0,0);
+
+                &:selected {
+                    -fx-background-color:@textColor;
+                }
+                .label,&:focused .label{
+                    -fx-text-fill: #FFF;
+                }
+
+            }
+        }
+
+        -fx-background-color: @table-bg;
+
+        .folder-tree {
+
+            -fx-background-color:@table-bg;
+
+            -fx-border-color: #343a40;
+            -fx-border-width: 0 2 0 0;
+            -fx-border-style: solid;
+
+            .tree-cell {
+
+                -fx-text-fill: #EEE;
+                -fx-effect: dropshadow(three-pass-box, #FFF, 1, 0.0, 0, 0);
+                .arrow {
+                    -fx-background-color: #EEE;
+                }
+
+                -fx-background-color: rgba(0,0,0,0);
+    
+                &:selected {
+                    -fx-background-color:@textColor;
+                }
+    
+            }
+        }
+    }
+   
+    .archive-tool-buttons {
+        .button {
+            -fx-background-color: rgba(0,0,0,0);
+            -fx-text-fill:@menu;
+            &:hover {
+                -fx-effect: dropshadow(three-pass-box, #CDCDCD, 8, 0.0, 0, 3);
+            }
+        }
+        .menu-button {
+            -fx-background-color: rgba(0,0,0,0);
+            .label {
+                -fx-text-fill: @menu;
+            }
+            .arrow-button {
+                .arrow {
+                    -fx-background-color: @menu;
+                }
+                -fx-font-size: 12;
+            }
+            .menu-item {
+                .label {
+                    -fx-text-fill: @textColor;
+                }
+                &:focused {
+                    .label {
+                        -fx-text-fill: #FFF;
+                    }
+                    -fx-background-color: @menu;
+                }
+            }
+        }
+    }
+
+    .start-group {
+
+        .button,.menu-button {
+
+            -fx-background-color: @textColor-half;
+            -fx-border-width: 2;
+            -fx-border-style: dashed;
+            -fx-border-color: @secondary;
+            -fx-border-radius: 4;
+
+            -fx-text-fill:#FFF;
+
+            &:hover {
+                -fx-effect: dropshadow(three-pass-box, #CDCDCD, 4, 0.0, 0, 3);
+            }
+
+        }
+
+        .menu-button {
+            .label {
+                -fx-text-fill: @secondary;
+            }
+            .arrow-button {
+                .arrow {
+                    -fx-background-color: #FFF;
+                }
+                -fx-font-size: 12;
+            }
+
+            .menu-item {
+                .label {
+                    -fx-text-fill: @textColor;
+                }
+                &:focused {
+                    .label {
+                        -fx-text-fill: #FFF;
+                    }
+                    -fx-background-color: @menu;
+                }
+            }
+        }
+
+    }
+
+    .start-pane {
+        .button {
+            -fx-background-color: @secondary;
+            -fx-text-fill:@textColor;
+            &:hover {
+                -fx-effect: dropshadow(three-pass-box, #CDCDCD, 8, 0.0, 0, 3);
+            }
+        }
+        
+    }
+}
+
+.progress-view {
+
+    -fx-font-family: 'Source Han Sans CN Normal';
+    -fx-font-size: 13;
+    -fx-background-color: @background;
+
+    .progress-bar{
+        .track {
+            -fx-background-color:@background;
+            -fx-background-radius: 999;
+            -fx-effect: innershadow(three-pass-box, @secondary, 6, 0, 0, 2);
+        }
+        .bar{
+            -fx-background-radius: 999;
+            -fx-background-color:@table-bg;
+        }
+    }
+}
+
+.helpview {
+
+     -fx-background-color:@table-bg;
+
+     .tree-view {
+        -fx-background-color:@table-bg;
+        .tree-cell {
+            -fx-text-fill: #EEE;
+            .arrow {
+                -fx-background-color: #EEE;
+            }
+            -fx-background-color: rgba(0,0,0,0);
+            &:selected {
+                -fx-background-color:@textColor;
+            }
+        }
+     }
+
+}
+
+.password-view {
+
+    -fx-background-color: @background;
+
+    .password-field {
+        -fx-background-color: rgba(0,0,0,0);
+        -fx-border-style: solid;
+        -fx-border-color: linear-gradient(to bottom,@secondary, rgba(0,0,0,0),rgba(0,0,0,0), @secondary);
+        -fx-border-width: 1px;
+    }
+
+    .button {
+        -fx-background-color: @secondary;
+        -fx-text-fill:#FFF;
+        &:hover {
+            -fx-effect: dropshadow(three-pass-box, #CDCDCD, 8, 0.0, 0, 3);
+        }
+    }
+
+}
+
+.previews {
+
+     -fx-background-color:@table-bg;
+
+     .text-area {
+        -fx-text-fill: #FFF;
+        -fx-font-size: 16px;
+        .scroll-pane {
+            -fx-background-color:@table-bg;
+            .content {
+                -fx-background-color:@table-bg;
+            }
+        }
+     }
+
+    .slider .thumb{
+        -fx-background-color:@primary;
+        -fx-effect:dropshadow(three-pass-box, @secondary,10,0,0,0);
+    }
+    .slider .track {
+        -fx-background-color:@background;
+        -fx-background-radius:99;
+        -fx-border-radius: 99;
+        -fx-border-width: 1px;
+        -fx-border-color:@secondary;
+    }
+
+}

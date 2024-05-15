@@ -15,9 +15,9 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="577.0" prefWidth="899.0" styleClass="main-view" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swdc.archive.views.controller.ArchiveViewController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="577.0" prefWidth="899.0" styleClass="main-view" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swdc.archive.views.controller.ArchiveViewController">
    <top>
-      <VBox prefHeight="87.0" prefWidth="811.0" BorderPane.alignment="CENTER">
+      <VBox prefHeight="87.0" prefWidth="811.0" styleClass="controlPane" BorderPane.alignment="CENTER">
          <children>
             <MenuBar>
               <menus>
