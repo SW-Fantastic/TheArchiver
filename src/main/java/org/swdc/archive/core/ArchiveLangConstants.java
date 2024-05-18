@@ -44,6 +44,8 @@ public interface ArchiveLangConstants {
     String LangGZipArchiveCannotAddFile = "archive.gzip.cannot-add-file";
     String LangGZipArchiveCannotRemoveFile = "archive.gzip.cannot-remove-file";
 
+    String LangXZArchiveDisplayName = "archive.xz.display-name";
+
     String LangTarArchiveDisplayName = "archive.tar.display-name";
     String LangSevenZipDisplayName = "archive.seven-zip.display-name";
     String LangSevenZipMissingFirstVolume = "archive.seven-zip.first-volumed-file-missing";

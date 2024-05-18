@@ -5,6 +5,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarFile;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.swdc.archive.core.Archive;
 import org.swdc.archive.core.ArchiveEntry;
 import org.swdc.archive.core.TarArchiver;
@@ -46,7 +47,7 @@ public class TgzArchiver extends TarArchiver {
 
     @Override
     protected TarArchiveOutputStream createOutputStream(File file) throws IOException {
-        return new TarArchiveOutputStream(new GZIPOutputStream(new FileOutputStream(file)));
+        return new TarArchiveOutputStream(new GzipCompressorOutputStream(new FileOutputStream(file)));
     }
 
 

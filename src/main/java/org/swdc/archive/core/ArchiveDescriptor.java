@@ -19,6 +19,7 @@ import java.io.File;
         ZipArchiverDescriptor.class,
         SevenZipArchiverDescriptor.class,
         GZipArchiverDescriptor.class,
+        XZipArchiverDescriptor.class,
         TarArchiverDescriptor.class,
         RarArchiverDescriptor.class
 })

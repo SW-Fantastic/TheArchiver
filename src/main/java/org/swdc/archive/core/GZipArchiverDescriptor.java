@@ -19,6 +19,7 @@ import org.swdc.fx.FXResources;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 @MultipleImplement(ArchiveDescriptor.class)
-public class GZipArchiverDescriptor implements ArchiveDescriptor {
+public class GZipArchiverDescriptor extends SteamBasedDescriptor {
 
     private FileChooser.ExtensionFilter filter = null;
 
@@ -39,6 +40,16 @@ public class GZipArchiverDescriptor implements ArchiveDescriptor {
 
     @Inject
     private Logger logger;
+
+    @Override
+    protected OutputStream createCompressStream(FileOutputStream fos) throws Exception {
+        return new GzipCompressorOutputStream(fos);
+    }
+
+    @Override
+    public String subfix() {
+        return ".gz";
+    }
 
     @Override
     public boolean creatable() {
@@ -76,147 +87,4 @@ public class GZipArchiverDescriptor implements ArchiveDescriptor {
         return new GZipArchiver(resources,file,view,commonService);
     }
 
-    @Override
-    public void createArchive(CompressView view) {
-        view.show();
-        ResourceBundle bundle = resources.getResourceBundle();
-        if (!view.isCanceled()) {
-            List<File> sources = view.getCompressSource();
-            File folder = view.getTargetFolder();
-            String name = folder.getName();
-            if (sources.size() == 1) {
-                name = sources.get(0).getName();
-            }
-            String[] names = name.split("[.]");
-            File targetFile = new File(view.getTargetFolder() +
-                    File.separator + view.getFileName() +
-                    (names.length > 1 ? "." + names[names.length - 1] : "") +
-                    (sources.size() > 1 ? ".tar.gz": ".gz"));
-            if (targetFile.exists()) {
-                Alert alert = view.alert(
-                        bundle.getString(ArchiveLangConstants.LangArchiveMessageTitle),
-                        bundle.getString(ArchiveLangConstants.LangArchiveFileOverride),
-                        Alert.AlertType.CONFIRMATION
-                );
-                Optional<ButtonType> type = alert.showAndWait();
-                if (type.isEmpty() || !type.get().equals(ButtonType.OK)) {
-                    return;
-                }
-                targetFile.delete();
-            }
-
-            if (sources.size() > 1) {
-
-                commonService.submit(() -> {
-                    ProgressView progressView = view.getView(ProgressView.class);
-                    progressView.update(
-                            bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
-                            bundle.getString(ArchiveLangConstants.LangArchiveIndexing),
-                            0
-                    );
-                    progressView.show();
-                    try {
-
-                        List<ArchiveSource> files = sources.stream().map(ArchiveSource::new).collect(Collectors.toList());
-                        int count = files.stream()
-                                .mapToInt(f -> f.getFiles().size())
-                                .reduce(Integer::sum)
-                                .getAsInt();
-
-
-                        double hasArchived = 0;
-
-                        FileOutputStream fos = new FileOutputStream(targetFile);
-                        GzipCompressorOutputStream gout = new GzipCompressorOutputStream(fos);
-                        TarArchiveOutputStream tout = new TarArchiveOutputStream(gout);
-                        tout.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
-
-                        for (ArchiveSource item: files) {
-                           try {
-                               for (File itemFile: item.getFiles()) {
-                                   if (itemFile.isDirectory()) {
-                                       hasArchived ++;
-                                       continue;
-                                   }
-                                   String path = item.getParent().toPath().toAbsolutePath()
-                                           .relativize(itemFile.toPath())
-                                           .normalize()
-                                           .toString();
-                                   if (path.startsWith("..")) {
-                                       path = path.replace("..", "");
-                                   }
-                                   ArchiveEntry entry = tout.createArchiveEntry(itemFile,path);
-                                   tout.putArchiveEntry(entry);
-                                   FileInputStream fin = new FileInputStream(itemFile);
-                                   tout.write(fin.readAllBytes());
-                                   tout.closeArchiveEntry();
-                                   fin.close();
-                                   hasArchived ++;
-                                   progressView.update(
-                                           bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
-                                           path,
-                                           hasArchived / count
-                                   );
-                               }
-
-                           } catch (Exception e) {
-                              logger.error("failed to create gzip file", e);
-                           }
-                        }
-
-                        tout.close();
-                        gout.close();
-                        fos.close();
-
-                    } catch (Exception e) {
-                        logger.error("failed to create gzip file", e);
-                    } finally {
-                        progressView.hide();
-                    }
-                });
-
-
-            } else {
-                ProgressView progressView = view.getView(ProgressView.class);
-                progressView.update(
-                        bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
-                        bundle.getString(ArchiveLangConstants.LangArchiveResolving),
-                        0.0
-                );
-                commonService.submit(() -> {
-                    try {
-
-                        File source = sources.get(0);
-
-                        progressView.show();
-                        FileInputStream fin = new FileInputStream(source);
-                        FileOutputStream fos = new FileOutputStream(targetFile);
-                        GZIPOutputStream gout = new GZIPOutputStream(fos);
-
-                        double size = source.length();
-                        byte[] buf = new byte[1024 * 1024];
-                        int bufRead = 0;
-                        double curr = 0;
-                        while ((bufRead = fin.read(buf)) != -1) {
-                            gout.write(buf);
-                            curr = curr + bufRead;
-                            progressView.update(
-                                    bundle.getString(ArchiveLangConstants.LangArchiveInProgress),
-                                    bundle.getString(ArchiveLangConstants.LangArchiveWritingFile),
-                                    curr / size
-                            );
-                        }
-
-                        gout.close();
-                        fos.close();
-                        fin.close();
-                    } catch (Exception e) {
-                       logger.error("failed to create a gzip file", e);
-                    } finally {
-                        progressView.hide();
-                    }
-                });
-            }
-        }
-    }
 }
