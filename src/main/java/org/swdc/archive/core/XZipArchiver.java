@@ -9,10 +9,6 @@ import org.swdc.fx.FXResources;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.zip.GZIPInputStream;
 
 public class XZipArchiver extends SteamBasedArchiver {
 

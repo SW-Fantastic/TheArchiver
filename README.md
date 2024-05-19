@@ -13,13 +13,15 @@ the project is an archive file manager which can browser , unarchive , create
 
 ## 进展
 
- - [x] 浏览，解压和压缩Zip文件
- - [x] 浏览，解压和压缩7Zip文件
- - [x] 浏览，解压和压缩Tar文件
- - [x] 浏览，解压和压缩Gz文件
- - [x] 浏览，解压和压缩Tar/GZ文件
+ - [x] 浏览，解压和压缩Zip文件（Zip4J）
+ - [x] 浏览，解压和压缩7Zip文件（SevenZipJBinding）
+ - [x] 浏览，解压和压缩Tar文件（Apache CommonCompress）
+ - [x] 浏览，解压和压缩Tar/GZ文件（Apache CommonCompress）
  - [x] 分卷的Zip压缩文件处理
  - [x] 分卷的7Zip压缩文件处理
+ - [x] 浏览，解压和创建Tar/BZIP2文件（Apache CommonCompress）
+ - [x] 浏览，解压和创建Tar/Xz文件（Apache CommonCompress）
+ - [x] 英文UI（English ui）
  - [ ] 文件预览功能
 
 ## 额外说明

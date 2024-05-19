@@ -41,22 +41,33 @@ public interface ArchiveLangConstants {
     String LangZipArchiveOpenFailed="archive.zip.open-failed";
 
     String LangGZipArchiveDisplayName = "archive.gzip.display-name";
+
     String LangGZipArchiveCannotAddFile = "archive.gzip.cannot-add-file";
+
     String LangGZipArchiveCannotRemoveFile = "archive.gzip.cannot-remove-file";
 
     String LangXZArchiveDisplayName = "archive.xz.display-name";
 
+    String LangBZip2DisplayName = "archive.bz2.display-name";
+
     String LangTarArchiveDisplayName = "archive.tar.display-name";
+
     String LangSevenZipDisplayName = "archive.seven-zip.display-name";
+
     String LangSevenZipMissingFirstVolume = "archive.seven-zip.first-volumed-file-missing";
 
     String LangArchiveViewTitle = "stage.archive.title";
+
     String LangArchiveViewDecompressAll = "archive.extract-all";
+
     String LangArchiveViewDecompressSelectedFiles = "archive.extract-selected";
+
     String LangArchiveViewDecompressSelectedFolder = "archive.extract-selected-folder";
+
     String LangArchiveViewDecompressInto = "compress.decompress-target-location";
 
     String LangArchiveDialogFail = "dialog.fail";
+
     String LangArchiveEmptyPassword = "dialog.password-empty";
 
 }
