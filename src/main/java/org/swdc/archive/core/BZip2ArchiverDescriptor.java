@@ -39,7 +39,7 @@ public class BZip2ArchiverDescriptor extends SteamBasedDescriptor {
         if (filter == null) {
             ResourceBundle bundle = resources.getResourceBundle();
             filter = new FileChooser.ExtensionFilter(bundle.getString(
-                    ArchiveLangConstants.LangXZArchiveDisplayName),
+                    ArchiveLangConstants.LangBZip2DisplayName),
                     "*.bz2","*.tar.bz2","*.tbz2"
             );
         }
